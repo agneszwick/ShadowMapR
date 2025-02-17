@@ -1,0 +1,24 @@
+Package: ShadowMapR
+Type: Package
+Title: Create and visualize building shadow maps
+Version: 0.1.0
+Author: Agnes Zwick
+Maintainer: The package maintainer <agnes.zwick@stud-mail.uni-wuerzburg.de>
+Description: This package allows users to calculate and visualize building shadows, 
+    including sunlight and shadow areas, using XML data and geographical information.
+License: GPL-3
+Imports:
+    dplyr,
+    furrr,
+    ggplot2,
+    leaflet,
+    purrr,
+    sf,
+    stringr,
+    tibble,
+    tidyr,
+    xml2,
+    suntools
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
