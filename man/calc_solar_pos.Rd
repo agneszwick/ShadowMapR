@@ -2,20 +2,20 @@
 % Please edit documentation in R/calculate_building_centroid_and_sun_position.R
 \name{calc_solar_pos}
 \alias{calc_solar_pos}
-\title{Calculate solar position for building centroids}
+\title{Calculate Solar Position for Building Centroids}
 \usage{
 calc_solar_pos(centroids, time, buildings)
 }
 \arguments{
-\item{centroids}{sf object containing building centroids}
+\item{centroids}{sf object containing centroids of building geometries}
 
-\item{time}{POSIXct object representing the time for solar position calculation}
+\item{time}{POSIXct time for which to calculate the solar position}
 
-\item{buildings}{sf object containing building geometries (to be updated with solar positions)}
+\item{buildings}{sf object containing building geometries}
 }
 \value{
-sf object containing building geometries along with calculated solar positions (azimuth and elevation)
+sf object with solar azimuth and elevation added as attributes
 }
 \description{
-Calculate solar position for building centroids
+Calculate Solar Position for Building Centroids
 }

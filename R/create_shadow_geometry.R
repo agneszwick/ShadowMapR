@@ -1,20 +1,36 @@
 #' Process buildings and create shadow geometries
 #' @param buildings sf object containing building geometries with a geometry column
+#' @importFrom sf st_make_valid st_is_empty st_geometry
+#' @importFrom dplyr mutate filter
 #' @return sf object containing processed buildings
 #' @export
 process_buildings <- function(buildings) {
   message("Processing buildings...")
 
-  processed_buildings <- buildings %>%
-    mutate(
-      geometry = st_make_valid(geometry)
-    ) %>%
-    filter(
-      !st_is_empty(geometry)
-    )
+  # Überprüfe, ob ungültige oder leere Geometrien vorhanden sind
+  invalid_geom <- st_is_valid(st_geometry(buildings)) == FALSE
+  empty_geom <- st_is_empty(st_geometry(buildings)) == TRUE
+
+  message(sum(invalid_geom), " invalid geometries detected.")
+  message(sum(empty_geom), " empty geometries detected.")
+
+  # Wenn es ungültige oder leere Geometrien gibt, mache den Validierungsprozess
+  if (sum(invalid_geom) > 0 | sum(empty_geom) > 0) {
+    processed_buildings <- buildings %>%
+      mutate(
+        geometry = st_make_valid(st_geometry(buildings)) # Validierung der Geometrien
+      ) %>%
+      filter(
+        !st_is_empty(st_geometry(buildings)) # Filtere leere Geometrien
+      )
+  } else {
+    # Wenn keine ungültigen oder leeren Geometrien vorhanden sind, überspringe diesen Schritt
+    processed_buildings <- buildings
+  }
 
   return(processed_buildings)
 }
+
 
 
 #' Create shadow polygons from buildings
@@ -141,6 +157,7 @@ create_time_control <- function(time) {
 #' @param shadows sf object containing shadow polygons
 #' @param sunlight sf object containing sunlight areas
 #' @param time POSIXct object representing the time
+#' @importFrom leaflet setView
 #' @return leaflet map object
 #' @export
 create_shadow_map <- function(buildings, shadows, sunlight, time) {
@@ -188,31 +205,50 @@ create_shadow_map <- function(buildings, shadows, sunlight, time) {
     )
 }
 
+
 #' Main function to process buildings and create an interactive shadow map
 #'
 #' @param buildings sf object containing building geometries with shadow_geometry column
 #' @param time POSIXct object representing the time for shadow calculation
 #' @param batch_size integer number of buildings to process in each batch
-#' @param cache logical whether to cache intermediate results
 #' @return leaflet map object
 #' @export
-create_building_shadow_map <- function(buildings, time, batch_size = 50, cache = TRUE) {
-  # Process buildings
-  processed_buildings <- process_buildings(buildings, batch_size, cache)
+create_building_shadow_map <- function(buildings, time, batch_size = 50) {
+  # Verarbeite Gebäude
+  message("Processing buildings...")
+  processed_buildings <- process_buildings(buildings)
 
-  # Create shadow polygons
-  shadows <- create_shadow_polygons(processed_buildings, batch_size, cache)
+  # Überprüfe, ob das processed_buildings korrekt ist
+  if (is.null(processed_buildings) || nrow(processed_buildings) == 0) {
+    stop("Error: No processed buildings available.")
+  }
 
-  # Create sunlight areas
+  # Erstelle Schattengrafiken
+  message("Creating shadow polygons...")
+  shadows <- create_shadow_polygons(processed_buildings, batch_size)
+
+  # Überprüfe, ob shadows korrekt sind
+  if (is.null(shadows) || length(shadows) == 0) {
+    stop("Error: No shadow polygons created.")
+  }
+
+  # Erstelle Sonnenbereiche
+  message("Creating sunlight areas...")
   sunlight <- create_sunlight_areas(processed_buildings, shadows)
 
-  # Create and return the map
-  create_shadow_map(processed_buildings, shadows, sunlight, time)
-}
+  # Überprüfe, ob sunlight korrekt erstellt wurde
+  if (is.null(sunlight) || length(sunlight) == 0) {
+    stop("Error: No sunlight areas created.")
+  }
 
-# # Set the date and time for the shadow calculation
-# time <- as.POSIXct(paste("2025-02-02", "10:00"), format = "%Y-%m-%d %H:%M")
-#
-# # Create and display the map
-# map <- create_building_shadow_map(updated_buildings_with_shadows, time)
-# print(map)  # This will display the map in your R viewer/browser
+  # Erstelle und gebe die Karte zurück
+  message("Creating shadow map...")
+  map <- create_shadow_map(processed_buildings, shadows, sunlight, time)
+
+  # Überprüfe, ob die Karte korrekt erstellt wurde
+  if (is.null(map)) {
+    stop("Error: Shadow map not created.")
+  }
+
+  return(map)
+}

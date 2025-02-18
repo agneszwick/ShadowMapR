@@ -2,18 +2,9 @@
 #'
 #' @param xml_file Character string, path to the XML file containing building data
 #' @return Data frame containing extracted building data (building ID, part ID, geometry, height, and file name)
-#' @examples
-#' # Use example XML data bundled with the package
-#' example_xml_path <- system.file("extdata", "example_data.xml", package = "ShadowMapR")
-#' building_data <- extract_buildings(example_xml_path)
-#' head(building_data)
-#' @export
-
-
-#' Extract building data from an XML file
-#'
-#' @param xml_file Character string, path to the XML file containing building data
-#' @return Data frame containing extracted building data (building ID, part ID, geometry, height, and file name)
+#' @importFrom xml2 read_xml xml_ns xml_find_all xml_attr xml_text xml_find_first
+#' @importFrom dplyr %>% group_by summarise across where first
+#' @importFrom sf st_as_sf st_union st_geometry_type st_cast st_is_empty st_transform st_crs
 #' @export
 extract_buildings <- function(xml_file) {
   xml <- read_xml(xml_file)
@@ -74,15 +65,15 @@ extract_buildings <- function(xml_file) {
 
   # Combine all results at once
   result <- do.call(rbind, result_list)
-  gc() # Clean up memory
   return(result)
 }
 
-#' Convert 3D building geometries to 2D by ignoring the Z-coordinate
+#' Convert building data to 2D polygons
 #'
-#' @param building_data Data frame containing building data with geometry in WKT format
-#' @param tolerance Numeric value specifying the tolerance for simplifying geometries (default is 0.1)
-#' @return sf object containing the 2D geometries of the buildings
+#' @param building_data Data frame containing building data
+#' @param tolerance Numeric value for geometry simplification
+#' @return sf object containing 2D building polygons
+#' @importFrom sf st_as_sf st_simplify st_is_empty st_crs
 #' @export
 convert_to_2D <- function(building_data, tolerance = 0.1) {
   # Vectorized geometry processing
@@ -104,19 +95,15 @@ convert_to_2D <- function(building_data, tolerance = 0.1) {
   sf_obj <- st_simplify(sf_obj, dTolerance = tolerance)
   sf_obj <- sf_obj[!st_is_empty(sf_obj$geometry), ]
 
-  gc() # Clean up memory
   return(sf_obj)
 }
 
-
-plan(multisession)  # Nutze alle verfügbaren CPU-Kerne
-
-
-
-#' Clean and process building geometries by merging parts and handling multipolygons
+#' Clean polygon geometries
 #'
-#' @param building_sf sf object containing building geometries with part IDs
-#' @return sf object with cleaned and processed geometries, where multipolygons are simplified and parts are merged
+#' @param building_sf sf object containing building polygons
+#' @return sf object with cleaned polygons
+#' @importFrom dplyr group_by summarise across where first
+#' @importFrom sf st_union st_geometry_type st_cast st_is_empty
 #' @export
 clean_polygon <- function(building_sf) {
   # Group and summarize in one operation
@@ -124,7 +111,7 @@ clean_polygon <- function(building_sf) {
     group_by(part_id) %>%
     summarise(
       geometry = st_union(geometry),
-      across(where(is.numeric), \(x) mean(x, na.rm = TRUE)), # <- Fix für Warnung 1
+      across(where(is.numeric), mean, na.rm = TRUE),
       across(where(is.character), first),
       .groups = "drop"
     )
@@ -136,7 +123,7 @@ clean_polygon <- function(building_sf) {
     single_polys <- result[!multi_idx, ]
 
     # Process multipolygons
-    multi_polys <- st_cast(multi_polys, "POLYGON", group_or_split = TRUE) # <- Fix für Warnung 2
+    multi_polys <- st_cast(multi_polys, "POLYGON")
     multi_polys$part_id <- paste0(multi_polys$part_id, "_", seq_len(nrow(multi_polys)))
 
     # Combine results
@@ -146,12 +133,12 @@ clean_polygon <- function(building_sf) {
   # Remove invalid geometries
   result <- result[!st_is_empty(result$geometry), ]
 
-  gc() # Clean up memory
   return(result)
 }
 
 #' Visualize building geometries with Leaflet
 #'
+#' @importFrom leaflet leaflet addTiles addPolygons colorQuantile
 #' @param building_sf sf object containing building geometries with height and building ID
 #' @return A leaflet map object showing building geometries, colored by height
 #' @export
@@ -161,38 +148,12 @@ visualize_buildings <- function(building_sf) {
 
   # Visualize with Leaflet
   leaflet(building_sf_4326) %>%
-    addTiles() %>%
-    addPolygons(
-      fillColor = ~colorQuantile("YlOrRd", height)(height),
+    leaflet::addTiles() %>%
+    leaflet::addPolygons(
+      fillColor = ~leaflet::colorQuantile("YlOrRd", height)(height),
       fillOpacity = 0.5,
       color = "black",
       weight = 1,
       popup = ~paste("Building ID: ", bldg_id, "<br>", "Height: ", height)
     )
 }
-
-# # APPLY FUNCTIONS
-# # Load and process selected XML files
-# xml_files <- list.files("C:/Users/agnes/Documents/EAGLE/Introduction_Programming/Assignment_25/sunshine/LoD1",
-#                         pattern = "\\.xml$", full.names = TRUE)
-# # Filter files by specific filename endings
-
-# filter_files <- function(file_list, endings) {
-#   pattern <- paste0(endings, collapse = "|")
-#   file_list[grepl(pattern, file_list)]
-# }
-
-# selected_files <- filter_files(xml_files, c("385_5814"))
-# building_data <- map_dfr(selected_files, extract_buildings)
-# # print(building_data)
-#
-# # Convert to sf
-# building_sf <- convert_to_2D(building_data, tolerance = 0.1)
-# print(building_sf)
-#
-# # Clean the data
-# building_sf <- clean_polygon(building_sf)
-#
-# # Visualize the data
-# visualize_buildings(building_sf)
-

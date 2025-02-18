@@ -7,8 +7,12 @@ Maintainer: The package maintainer <agnes.zwick@stud-mail.uni-wuerzburg.de>
 Description: This package allows users to calculate and visualize building shadows, 
     including sunlight and shadow areas, using XML data and geographical information.
 License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
 Imports:
     dplyr,
+    future,
     furrr,
     ggplot2,
     leaflet,
@@ -19,6 +23,7 @@ Imports:
     tidyr,
     xml2,
     suntools
-Encoding: UTF-8
-LazyData: true
-RoxygenNote: 7.3.2
+Suggests:
+    testthat,
+    knitr,
+    rmarkdown

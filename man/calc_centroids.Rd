@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculate_building_centroid_and_sun_position.R
 \name{calc_centroids}
 \alias{calc_centroids}
-\title{Calculate centroids of building geometries}
+\title{Calculate Centroids for Building Geometries}
 \usage{
 calc_centroids(buildings)
 }
@@ -10,8 +10,8 @@ calc_centroids(buildings)
 \item{buildings}{sf object containing building geometries}
 }
 \value{
-sf object containing the centroids of the building geometries
+sf object with centroids of the building geometries
 }
 \description{
-Calculate centroids of building geometries
+This function calculates the centroids for the provided building geometries.
 }

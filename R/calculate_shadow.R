@@ -1,5 +1,5 @@
 #' Calculate the shadow length based on building height and solar elevation angle
-#' 
+#'
 #' @param measuredHeight Numeric value representing the measured height of the building (in meters)
 #' @param solar_elevation_angle Numeric value representing the solar elevation angle (in degrees)
 #' @return Numeric value representing the shadow length (in meters)
@@ -14,75 +14,102 @@ calculate_shadow_length <- function(measuredHeight, solar_elevation_angle) {
 }
 
 #' Calculate the shadow points of a building based on solar position and shadow length
-#' 
+#'
 #' @param building sf object containing the geometry of a building (POLYGON geometry)
-#' @param solar_pos Numeric vector of length 2, where the first element is the azimuth angle and the second element is the elevation angle of the sun (in degrees)
-#' @param h Numeric value representing the shadow length (in meters), calculated based on the building's height and solar elevation angle
+#' @param solar_pos Numeric vector of length 2, where the first element is the solar azimuth (in degrees)
+#'                  and the second element is the solar elevation (in degrees)
+#' @param shadow_length Numeric value representing the shadow length (in meters), calculated based on the building's height and solar elevation angle
+#' @importFrom sf st_polygon st_sfc st_coordinates st_crs
 #' @return sf object containing the shadow polygon geometry of the building
-calculate_shadow_points <- function(building, solar_pos, h) {
-  # Extract the geometry of the building
+calculate_shadow_points <- function(building, solar_pos, shadow_length) {
+  # Check if the building geometry is valid
   if (!inherits(building$geometry, "sfc_POLYGON")) {
     stop("The building geometry is not a valid POLYGON object.")
   }
 
-  # Extract points from the geometry
+  # Greife direkt auf die solar_pos zu oder auch direkt auf die entsprechenden Spalten
+  # In diesem Beispiel verwenden wir solar_pos, wobei solar_pos[1] der Azimut und solar_pos[2] der Elevationwinkel ist.
+  sol_azimuth <- solar_pos[1]
+  sol_elevation <- solar_pos[2]
+
+  # Berechne den Schatten-Azimut:
+  # Der Schatten wird immer in die entgegengesetzte Richtung zum Sonnenstrahl geworfen.
+  # Daher addieren wir 180 Grad zum Sonnenazimut und nehmen den Modulo 360, um den Wert in den Bereich 0-359 Grad zu bringen.
+  shadow_azimuth <- (sol_azimuth + 180) %% 360
+
+  # Um die trigonometrischen Funktionen in R zu verwenden, müssen wir den Azimut in Bogenmaß umrechnen.
+  azimuth_radians_shadow <- shadow_azimuth * (pi / 180)
+
+  # Extrahiere die Koordinaten des Gebäude-POLYGONS und entferne Duplikate sowie Z-Werte (falls vorhanden)
   points <- st_coordinates(building$geometry)
-  # Get unique points (remove duplicates and Z coordinates if present)
   points <- unique(points[, 1:2])
 
-  # Initialize an empty list to store shadow points
+  # Initialisiere eine Liste für die Schattenpunkte
   shadow_points_list <- list()
 
-  # Loop through all points in the polygon and calculate the shadow
+  # Berechne für jeden Eckpunkt des Gebäudes den entsprechenden Schattenpunkt
   for (i in 1:nrow(points)) {
-    # Current point coordinates
+    # Aktueller Punkt
     point <- points[i, ]
 
-    # Calculate the sun vector (length = h, angle = solar_pos[1])
-    azimuth_radians <- (solar_pos[1] - 180) * (pi / 180)  # Correct azimuth
-    sun_vector <- c(h * cos(azimuth_radians), h * sin(azimuth_radians))
+    # Berechne den Schattenvektor:
+    # Der Schattenvektor hat die Länge shadow_length und zeigt in die Richtung shadow_azimuth (in Bogenmaß).
+    # Dabei gibt cos() den x-Anteil und sin() den y-Anteil.
+    shadow_vector_x <- shadow_length * sin(azimuth_radians_shadow)
+    shadow_vector_y <- shadow_length * cos(azimuth_radians_shadow)
 
-    # Calculate the shadow point by subtracting the sun vector from the point
-    shadow_point <- point - sun_vector
+    # Berechne den Schattenpunkt, indem du den Schattenvektor zu den Koordinaten des Punktes addierst.
+    # (Je nachdem, ob der Schatten vom Gebäude weg oder in dessen Richtung liegen soll, kann hier subtrahiert oder addiert werden.
+    # Hier nehmen wir an, dass der Schatten in die Richtung des Vektors liegt.)
+    shadow_point <- point + c(shadow_vector_x, shadow_vector_y)
 
-    # Add the calculated shadow point to the list
+    # Füge den berechneten Schattenpunkt zur Liste hinzu
     shadow_points_list[[i]] <- shadow_point
   }
 
-  # Convert the list of shadow points to a matrix and close the polygon
+  # Konvertiere die Liste der Schattenpunkte in eine Matrix und schließe das Polygon (indem der erste Punkt erneut angehängt wird)
   shadow_matrix <- do.call(rbind, shadow_points_list)
-  shadow_matrix <- rbind(shadow_matrix, shadow_matrix[1,])  # Close the polygon
+  shadow_matrix <- rbind(shadow_matrix, shadow_matrix[1,])
 
-  # Convert to polygon geometry
+  # Erstelle das Schattenpolygon aus der Matrix
   shadow_polygon <- st_polygon(list(shadow_matrix))
 
   return(st_sfc(shadow_polygon, crs = st_crs(building)))
 }
 
+
 #' Calculate shadow geometry for each building
-#' 
+#'
 #' @param buildings sf object containing building geometries and attributes such as height, solar azimuth, and solar elevation
 #' @return sf object containing buildings with an additional column `shadow_geometry` representing the calculated shadow polygons for each building
-
+#' @importFrom sf st_sfc st_crs
 calculate_all_shadows <- function(buildings) {
+  # Überprüfe, ob die notwendigen Spalten vorhanden sind
+  required_columns <- c("height", "sol_azimuth", "sol_elevation")
+  missing_columns <- setdiff(required_columns, names(buildings))
+  if (length(missing_columns) > 0) {
+    stop(sprintf("Missing required columns: %s", paste(missing_columns, collapse = ", ")))
+  }
+
   # Compute shadow geometry for each building
   shadow_geometries <- lapply(1:nrow(buildings), function(i) {
     current_building <- buildings[i, ]
 
-    # Extract solar azimuth, elevation, and building height
+    # Extrahiere Solarposition und Gebäudehöhe
     solar_azimuth <- current_building$sol_azimuth
     solar_elevation <- current_building$sol_elevation
     measured_height <- current_building$height
 
-    # Step 1: Calculate shadow length
+    # Step 1: Berechne die Schattenlänge
+    # Wenn die Sonnenelevation <= 0 ist, gibt es keinen Schatten (Nacht oder Sonnenuntergang)
     if (solar_elevation <= 0) {
-      return(NULL)  # No shadow during sunset/night
+      return(NULL)
     }
-    h <- calculate_shadow_length(measured_height, solar_elevation)
+    shadow_length <- calculate_shadow_length(measured_height, solar_elevation)
 
-    # Step 2: Calculate shadow points and return the shadow geometry
+    # Step 2: Berechne die Schattenpunkte und gib die Geometrie des Schattens zurück
     tryCatch(
-      calculate_shadow_points(current_building, c(solar_azimuth, solar_elevation), h),
+      calculate_shadow_points(current_building, c(solar_azimuth, solar_elevation), shadow_length),
       error = function(e) {
         message(sprintf("Error calculating shadow for building %s: %s", i, e$message))
         return(NULL)
@@ -90,19 +117,9 @@ calculate_all_shadows <- function(buildings) {
     )
   })
 
-  # Convert the shadow geometries list into a single sfc column
+  # Konvertiere die Liste der Schattengeometrien in eine einzelne sfc-Spalte
   buildings$shadow_geometry <- st_sfc(do.call(c, shadow_geometries), crs = st_crs(buildings))
 
   return(buildings)
 }
-
-# # APPLY FUNCTIONS
-# # Calculate shadows for all buildings
-# updated_buildings_with_shadows <- calculate_all_shadows(building_sf)
-# 
-# # Output the first buildings with shadow geometry
-# print(head(updated_buildings_with_shadows))
-# 
-# # Optional: Visualization of buildings with their shadows
-# plot(st_geometry(updated_buildings_with_shadows), main = "Buildings with Shadows")
-# plot(st_geometry(do.call(c, updated_buildings_with_shadows$shadow_geometry)), add = TRUE, col = "red", lwd = 2)
+#

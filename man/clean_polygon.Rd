@@ -2,16 +2,16 @@
 % Please edit documentation in R/LoD1_data_processing.R
 \name{clean_polygon}
 \alias{clean_polygon}
-\title{Clean and process building geometries by merging parts and handling multipolygons}
+\title{Clean polygon geometries}
 \usage{
 clean_polygon(building_sf)
 }
 \arguments{
-\item{building_sf}{sf object containing building geometries with part IDs}
+\item{building_sf}{sf object containing building polygons}
 }
 \value{
-sf object with cleaned and processed geometries, where multipolygons are simplified and parts are merged
+sf object with cleaned polygons
 }
 \description{
-Clean and process building geometries by merging parts and handling multipolygons
+Clean polygon geometries
 }

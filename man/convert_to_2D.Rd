@@ -2,18 +2,18 @@
 % Please edit documentation in R/LoD1_data_processing.R
 \name{convert_to_2D}
 \alias{convert_to_2D}
-\title{Convert 3D building geometries to 2D by ignoring the Z-coordinate}
+\title{Convert building data to 2D polygons}
 \usage{
 convert_to_2D(building_data, tolerance = 0.1)
 }
 \arguments{
-\item{building_data}{Data frame containing building data with geometry in WKT format}
+\item{building_data}{Data frame containing building data}
 
-\item{tolerance}{Numeric value specifying the tolerance for simplifying geometries (default is 0.1)}
+\item{tolerance}{Numeric value for geometry simplification}
 }
 \value{
-sf object containing the 2D geometries of the buildings
+sf object containing 2D building polygons
 }
 \description{
-Convert 3D building geometries to 2D by ignoring the Z-coordinate
+Convert building data to 2D polygons
 }

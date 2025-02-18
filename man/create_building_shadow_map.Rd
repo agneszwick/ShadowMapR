@@ -4,7 +4,7 @@
 \alias{create_building_shadow_map}
 \title{Main function to process buildings and create an interactive shadow map}
 \usage{
-create_building_shadow_map(buildings, time, batch_size = 50, cache = TRUE)
+create_building_shadow_map(buildings, time, batch_size = 50)
 }
 \arguments{
 \item{buildings}{sf object containing building geometries with shadow_geometry column}
@@ -12,8 +12,6 @@ create_building_shadow_map(buildings, time, batch_size = 50, cache = TRUE)
 \item{time}{POSIXct object representing the time for shadow calculation}
 
 \item{batch_size}{integer number of buildings to process in each batch}
-
-\item{cache}{logical whether to cache intermediate results}
 }
 \value{
 leaflet map object

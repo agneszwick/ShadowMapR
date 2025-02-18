@@ -4,14 +4,15 @@
 \alias{calculate_shadow_points}
 \title{Calculate the shadow points of a building based on solar position and shadow length}
 \usage{
-calculate_shadow_points(building, solar_pos, h)
+calculate_shadow_points(building, solar_pos, shadow_length)
 }
 \arguments{
 \item{building}{sf object containing the geometry of a building (POLYGON geometry)}
 
-\item{solar_pos}{Numeric vector of length 2, where the first element is the azimuth angle and the second element is the elevation angle of the sun (in degrees)}
+\item{solar_pos}{Numeric vector of length 2, where the first element is the solar azimuth (in degrees)
+and the second element is the solar elevation (in degrees)}
 
-\item{h}{Numeric value representing the shadow length (in meters), calculated based on the building's height and solar elevation angle}
+\item{shadow_length}{Numeric value representing the shadow length (in meters), calculated based on the building's height and solar elevation angle}
 }
 \value{
 sf object containing the shadow polygon geometry of the building
