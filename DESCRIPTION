@@ -22,7 +22,8 @@ Imports:
     tibble,
     tidyr,
     xml2,
-    suntools
+    suntools, 
+    lubridate
 Suggests:
     testthat,
     knitr,

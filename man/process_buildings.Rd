@@ -13,5 +13,7 @@ process_buildings(buildings)
 sf object containing processed buildings
 }
 \description{
-Process buildings and create shadow geometries
+This function processes building geometries by checking for invalid geometries
+and filtering empty ones. Invalid geometries are corrected using `st_make_valid`
+and empty geometries are removed.
 }

@@ -32,6 +32,8 @@ extract_buildings <- function(xml_file) {
 
         # Process all geometry nodes at once
         geom_data <- lapply(geom_nodes, function(node) {
+          coords <- strsplit(xml_text(node), " ")[[1]]
+          if (length(coords) %% 3 != 0) return(NULL)  # Remove invalid geometries
           data.frame(
             bldg_id = bldg_id,
             part_id = part_id,
@@ -50,6 +52,8 @@ extract_buildings <- function(xml_file) {
       geom_nodes <- xml_find_all(bldg, ".//gml:posList", ns)
 
       geom_data <- lapply(geom_nodes, function(node) {
+        coords <- strsplit(xml_text(node), " ")[[1]]
+        if (length(coords) %% 3 != 0) return(NULL)  # Remove invalid geometries
         data.frame(
           bldg_id = bldg_id,
           part_id = bldg_id,
@@ -73,7 +77,7 @@ extract_buildings <- function(xml_file) {
 #' @param building_data Data frame containing building data
 #' @param tolerance Numeric value for geometry simplification
 #' @return sf object containing 2D building polygons
-#' @importFrom sf st_as_sf st_simplify st_is_empty st_crs
+#' @importFrom sf st_as_sf st_simplify st_is_empty st_crs st_is_valid st_make_valid
 #' @export
 convert_to_2D <- function(building_data, tolerance = 0.1) {
   # Vectorized geometry processing
@@ -91,12 +95,18 @@ convert_to_2D <- function(building_data, tolerance = 0.1) {
     crs = 25833
   )
 
+  # Remove invalid geometries
+  sf_obj <- sf_obj[st_is_valid(sf_obj$geometry), ]
+  sf_obj$geometry <- st_make_valid(sf_obj$geometry)
+
   # Simplify all geometries at once
   sf_obj <- st_simplify(sf_obj, dTolerance = tolerance)
   sf_obj <- sf_obj[!st_is_empty(sf_obj$geometry), ]
 
   return(sf_obj)
 }
+
+
 
 #' Clean polygon geometries
 #'

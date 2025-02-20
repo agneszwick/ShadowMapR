@@ -7,7 +7,7 @@
 create_sunlight_areas(buildings, shadows)
 }
 \arguments{
-\item{buildings}{sf object containing buildings}
+\item{buildings}{sf object containing building polygons}
 
 \item{shadows}{sf object containing shadow polygons}
 }

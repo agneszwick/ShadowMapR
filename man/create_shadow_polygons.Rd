@@ -4,7 +4,7 @@
 \alias{create_shadow_polygons}
 \title{Create shadow polygons from buildings}
 \usage{
-create_shadow_polygons(buildings, batch_size = 50)
+create_shadow_polygons(buildings, batch_size)
 }
 \arguments{
 \item{buildings}{sf object containing processed buildings}

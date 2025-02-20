@@ -4,10 +4,10 @@
 \alias{create_shadow_map}
 \title{Create an interactive map showing buildings, shadows, and sunlight areas}
 \usage{
-create_shadow_map(buildings, shadows, sunlight, time)
+create_shadow_map(buildings_union, shadows, sunlight, time)
 }
 \arguments{
-\item{buildings}{sf object containing buildings}
+\item{buildings_union}{sf object containing the merged building polygons}
 
 \item{shadows}{sf object containing shadow polygons}
 
