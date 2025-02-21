@@ -17,5 +17,32 @@ calc_solar_pos(centroids, time, buildings)
 sf object with solar azimuth and elevation added as attributes
 }
 \description{
-Calculate Solar Position for Building Centroids
+This function calculates the solar position (azimuth and elevation) for the provided centroids of building geometries
+at a specified time. It takes an `sf` object containing the centroids of building polygons and a `POSIXct` time object,
+and returns an `sf` object with the solar azimuth and elevation added as attributes.
+The solar position is calculated using the `solarpos` function from the `suntools` package.
+}
+\examples{
+\dontrun{
+# Example usage
+library(sf)
+library(suntools)
+
+# Create example centroids
+centroids <- st_sf(
+  part_id = c(1, 2),
+  geometry = st_sfc(
+    st_point(c(10.0, 20.0)),
+    st_point(c(30.0, 40.0))
+  ),
+  crs = 4326
+)
+
+# Specify the time for solar position calculation
+time <- as.POSIXct("2025-02-21 12:00:00", tz = "UTC")
+
+# Calculate solar position
+solar_position <- calc_solar_pos(centroids, time, centroids)
+print(solar_position)
+}
 }

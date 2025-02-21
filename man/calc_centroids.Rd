@@ -14,4 +14,26 @@ sf object with centroids of the building geometries
 }
 \description{
 This function calculates the centroids for the provided building geometries.
+It takes an `sf` object containing building polygons and returns an `sf` object with the centroids of these polygons.
+The centroids are calculated using the `st_centroid` function from the `sf` package.
+The centroids are needed because the `suntools` package requires point coordinates to calculate the solar position.
+}
+\examples{
+\dontrun{
+# Example usage
+library(sf)
+
+# Create example building geometries
+building_sf <- st_sf(
+  part_id = c(1, 2),
+  geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  )
+)
+
+# Calculate centroids
+centroids_sf <- calc_centroids(building_sf)
+print(centroids_sf)
+}
 }
