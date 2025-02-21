@@ -2,18 +2,29 @@
 % Please edit documentation in R/data_loading.R
 \name{load_building_data}
 \alias{load_building_data}
-\title{Load and process building data from XML files}
+\title{Load building data from a directory or file}
 \usage{
-load_building_data(file_path, recursive = FALSE)
+load_building_data(path, crs_code)
 }
 \arguments{
-\item{file_path}{Character string. Path to a XML file or directory containing XML files}
+\item{path}{Character string. Path to the directory or file containing the files.}
 
-\item{recursive}{Logical. If TRUE and file_path is a directory, search recursively for XML files}
+\item{crs_code}{Character string. The coordinate reference system (CRS) code to be used.}
 }
 \value{
-sf object containing building geometries
+A combined simple feature (sf) object containing all building data in the coordinate system of the input file(s).
 }
 \description{
-Load and process building data from XML files
+This function loads building data from a directory or file. For each file in the directory,
+if the file is a GML file, it uses the `extract_gml_polygons` function.
+If the file is an XML file, it applies the appropriate functions (`extract_xml_polygons`, `convert_to_2D`, and `clean_building_polygons`).
+}
+\examples{
+\dontrun{
+# Load building data from a directory or file
+path <- "path/to/your/directory_or_file"
+crs_code <- "EPSG:25833"
+building_data <- load_building_data(path, crs_code)
+print(building_data)
+}
 }

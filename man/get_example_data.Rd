@@ -7,8 +7,15 @@
 get_example_data()
 }
 \value{
-sf object containing building geometries from the example dataset
+A simple feature (sf) object containing building geometries from the example dataset.
 }
 \description{
-Get example building data included with the package
+This function loads example building data included with the package.
+}
+\examples{
+\dontrun{
+# Get example building data
+example_data <- get_example_data()
+print(example_data)
+}
 }
