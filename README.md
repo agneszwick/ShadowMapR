@@ -2,7 +2,7 @@
 output:
   pdf_document: default
   html_document: default
----
+
 # ShadowMapR
 ShadowMapR allows users to **calculate and visualize building shadows** based on sunlight exposure and shadowed areas using **XML or GML data**.
 
@@ -114,8 +114,9 @@ building_offset <- calculate_all_shadows(building_sf)
 
 plot(st_geometry(building_offset$shadow_geometry), col = "grey")
 plot(st_geometry(building_offset), add = TRUE, col = "black", lwd = 2)
-
 ```
+<img src="images/building_offset.png" alt="Building offset" width="600" height="400">
+
 **`calculate_all_shadows`**
 The function shifts the outline of a building by creating a vector for each corner in the direction of the shadow to create the shadow's corner points.
 The vector is calculated based on the building's height, solar azimuth, and solar elevation. It returns an `sf` object containing the buildings with an additional column *shadow_geometry*.
@@ -127,15 +128,11 @@ The vector is calculated based on the building's height, solar azimuth, and sola
 - An `sf` object containing buildings with an additional column shadow_geometry representing the calculated shadow polygons for each building.
 
 
-
-
-### Create shadow map with sun, shadow and building polygons
 ```r
 shadow_map <- create_building_shadow_map(building_offset, time, batch_size = 100)
-shadow_map
-# This image is a screenshot of the interactive Leaflet map showing the visualization of the shadow and sunlight areas.
 ```
 <img src="images/shadow_map.png" alt="Visualization Example" width="600" height="400">
+**`create_building_shadow_map`**
 
 
 ### Use your own file(s)
