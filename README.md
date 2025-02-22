@@ -46,7 +46,7 @@ building_sf <- get_example_data()
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
 ```
-[Hier klicken, um die HTML-Datei anzusehen](https://github.com/agneszwick/ShadowMapR/inst/extdata/first_map_example.html)
+![Alt text](images/result_visualize_buildings.png)
 
 ### Use your own file(s)
 ```r
