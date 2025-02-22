@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 # ShadowMapR
 ShadowMapR allows users to **calculate and visualize building shadows** based on sunlight exposure and shadowed areas using **XML or GML data**.
 
@@ -153,3 +158,95 @@ building_sf <- load_building_data(file_path, crs_code)
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
 ```
+<<<<<<< Updated upstream
+=======
+
+### Calculate sun elevation and azimuth at defined time
+```r
+time <- as.POSIXct("yyyy-mm-dd hh:mm:ss", tz = "Europe/Berlin")
+# e.g.
+# time <- as.POSIXct("2025-02-18 15:00:00", tz = "Europe/Berlin")
+
+building_sf <- sun_position(building_sf, time)
+```
+### Calculate building offset based on shadow length/position
+```r
+building_offset <- calculate_all_shadows(building_sf)
+```
+
+### Create shadow map with sun, shadow and building polygons
+```r
+shadow_map <- create_building_shadow_map(building_offset, time, batch_size = 100)
+shadow_map
+```
+Functions
+process_buildings
+This function processes building geometries by checking for invalid geometries and filtering out empty ones. Invalid geometries are corrected using st_make_valid and empty geometries are removed. This ensures that the building geometries are valid and ready for further processing.
+
+Input:
+
+buildings: An sf object containing building geometries with a geometry column.
+Output:
+
+An sf object containing processed buildings with valid geometries.
+create_shadow_polygons
+This function creates shadow polygons from building geometries. It processes the buildings in batches, validates the geometries, and calculates the convex hull of the combined building and shadow geometries. The resulting shadow polygons are then dissolved into a single geometry.
+
+Input:
+
+buildings: An sf object containing processed buildings with valid geometries and shadow geometries.
+batch_size: Integer number of buildings to process in each batch.
+Output:
+
+An sf object containing dissolved shadow polygons.
+create_sunlight_areas
+This function creates sunlight areas by subtracting the building and shadow geometries from a bounding box.
+
+Input:
+
+buildings: An sf object containing building polygons.
+shadows: An sf object containing shadow polygons.
+Output:
+
+An sf object containing sunlight areas.
+sun_position
+This function calculates the solar position for the provided building data and time. It takes an sf object containing building polygons, calculates the centroids of these polygons using the calc_centroids function, and then calculates the solar position for these centroids using the calc_solar_pos function.
+
+Input:
+
+building_sf: An sf object containing building geometries.
+time: A POSIXct object representing the time for which to calculate the solar position.
+Output:
+
+An sf object containing building geometries and solar positions.
+calculate_all_shadows
+This function calculates the shadow geometry for each building in an sf object based on the building's height, solar azimuth, and solar elevation. It returns an sf object containing the buildings with an additional column shadow_geometry representing the calculated shadow polygons for each building.
+
+Input:
+
+buildings: An sf object containing building geometries and attributes such as height, solar azimuth, and solar elevation.
+Output:
+
+An sf object containing buildings with an additional column shadow_geometry representing the calculated shadow polygons for each building.
+create_building_shadow_map
+This function creates a shadow map with sun, shadow, and building polygons.
+
+Input:
+
+building_offset: An sf object containing buildings with shadow geometries.
+time: A POSIXct object representing the time for which to calculate the solar position.
+batch_size: Integer number of buildings to process in each batch.
+Output:
+
+An sf object containing the shadow map.
+License
+This project is licensed under the GPL-3 License - see the LICENSE file for details.
+
+Contributing
+Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
+
+Acknowledgments
+Hat tip to anyone whose code was used
+Inspiration
+etc
+>>>>>>> Stashed changes
