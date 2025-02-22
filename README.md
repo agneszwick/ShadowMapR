@@ -53,6 +53,7 @@ This image is a screenshot of the interactive Leaflet map showing the visualizat
 <img src="images/result_visualize_buildings.png" alt="Visualization Example" width="600" height="400">
 
 ### Use your own file(s)
+
 ```r
 # Load package
 library(ShadowMapR)
@@ -73,9 +74,9 @@ visualize_buildings(building_sf)
 ```
 
 ### Calculate sun elevation and azimuth at defined time
+
 ```r
 time <- as.POSIXct("yyyy-mm-dd hh:mm:ss", tz = "Europe/Berlin")
-# e.g.
 # time <- as.POSIXct("2025-02-18 15:00:00", tz = "Europe/Berlin")
 
 building_sf <- sun_position(building_sf, time)
