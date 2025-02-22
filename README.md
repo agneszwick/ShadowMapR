@@ -46,7 +46,9 @@ building_sf <- get_example_data()
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
 ```
-
+<object data="images/result_visualize_buildings.html" type="text/html" width="600" height="400">
+    <embed src="images/result_visualize_buildings.html" type="text/html">
+</object>
 
 ### Use your own file(s)
 ```r
