@@ -46,7 +46,7 @@ building_sf <- get_example_data()
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
 ```
-[View Visualization](images/visualize_buildings_example.html)
+<img src="images/result_visualize_buildings.png" alt="Visualization Example" width="600" height="400">
 
 ### Use your own file(s)
 ```r
@@ -59,11 +59,30 @@ file_path <- "path/to/your/xml/or/gml/file"
 # Extract crs of file
 crs_code <- extract_crs(file_path)
 print(crs)
-# 25832 (e.g.)
+# (e.g.) 25832 
 
 # Process xml/gml file and create simple feature 
 building_sf <- load_building_data(file_path, crs_code)
 
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
+```
+
+### Calculate sun elevation and azimuth at defined time
+```r
+time <- as.POSIXct("yyyy-mm-dd hh:mm:ss", tz = "Europe/Berlin")
+# e.g.
+# time <- as.POSIXct("2025-02-18 15:00:00", tz = "Europe/Berlin")
+
+building_sf <- sun_position(building_sf, time)
+```
+### Calculate building offset based on shadow length/position
+```r
+building_offset <- calculate_all_shadows(building_sf)
+```
+
+### Create shadow map with sun, shadow and building polygons
+```r
+shadow_map <- create_building_shadow_map(building_offset, time, batch_size = 100)
+shadow_map
 ```
