@@ -45,7 +45,11 @@ building_sf <- get_example_data()
 
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
+
+
 ```
+This image is a screenshot of the interactive Leaflet map showing the visualization of the processed building data.
+
 <img src="images/result_visualize_buildings.png" alt="Visualization Example" width="600" height="400">
 
 ### Use your own file(s)
@@ -85,4 +89,6 @@ building_offset <- calculate_all_shadows(building_sf)
 ```r
 shadow_map <- create_building_shadow_map(building_offset, time, batch_size = 100)
 shadow_map
+# This image is a screenshot of the interactive Leaflet map showing the visualization of the shadow and sunlight areas.
 ```
+<img src="images/shadow_map.png" alt="Visualization Example" width="600" height="400">
