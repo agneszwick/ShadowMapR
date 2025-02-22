@@ -19,7 +19,8 @@ visualize_buildings <- function(building_sf) {
       fillColor = ~colorQuantile("YlOrRd", height)(height),
       fillOpacity = 1,
       color = NA,
-      weight = 1
+      weight = 1,
+      popup = ~as.character(part_id)
       )
 }
 
@@ -144,7 +145,41 @@ run_interact_shadow_map <- function(map_layer, date) {
 
 
 
-#' Create an interactive map showing buildings, shadows, and sunlight areas
+#' Create a time control HTML element for the map
+#'
+#' @param time POSIXct object representing the time
+#' @return character string containing HTML for the time control
+#' @export
+create_time_control <- function(time) {
+  formatted_date <- format(time, "%Y-%m-%d")
+  formatted_time <- format(time, "%H:%M")
+  time_zone <- format(time, "%Z")
+
+  sprintf(
+    '<div style="
+      background-color: white;
+      padding: 8px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      margin: 10px;
+    ">
+      <strong>Shadow Forecast</strong><br>
+      Date: %s<br>
+      Time: %s %s
+    </div>',
+    formatted_date,
+    formatted_time,
+    time_zone
+  )
+}
+
+
+
+
+
+#' Create a map showing buildings, shadows, and sunlight areas
 #'
 #' @param buildings_union sf object containing the merged building polygons
 #' @param shadows sf object containing shadow polygons

@@ -7,13 +7,23 @@
 calculate_shadow_length(measuredHeight, solar_elevation_angle)
 }
 \arguments{
-\item{measuredHeight}{Numeric value representing the measured height of the building (in meters)}
+\item{measuredHeight}{Numeric value representing the measured height of the building (in meters).}
 
-\item{solar_elevation_angle}{Numeric value representing the solar elevation angle (in degrees)}
+\item{solar_elevation_angle}{Numeric value representing the solar elevation angle (in degrees).}
 }
 \value{
-Numeric value representing the shadow length (in meters)
+Numeric value representing the shadow length (in meters).
 }
 \description{
-Calculate the shadow length based on building height and solar elevation angle
+This function calculates the shadow length of a building based on its height and the solar elevation angle.
+The shadow length is calculated using the formula: shadow_length = height / tan(solar_elevation_angle).
+}
+\examples{
+\dontrun{
+# Example usage
+height <- 10
+solar_elevation <- 45
+shadow_length <- calculate_shadow_length(height, solar_elevation)
+print(shadow_length)
+}
 }

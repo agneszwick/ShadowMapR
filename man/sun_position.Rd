@@ -9,7 +9,7 @@ sun_position(building_sf, time)
 \arguments{
 \item{building_sf}{sf object containing building geometries}
 
-\item{time}{POSIXct. The time for which to calculate the solar position.}
+\item{time}{POSIXct. The time for which to calculate the solar position, defined in the format `as.POSIXct("yyyy-mm-dd hh:mm:ss", tz = "Europe/Berlin")`.}
 }
 \value{
 sf object containing building geometries and solar positions
@@ -19,6 +19,7 @@ This function calculates the solar position for the provided building data and t
 It takes an `sf` object containing building polygons, calculates the centroids of these polygons using the `calc_centroids` function,
 and then calculates the solar position for these centroids using the `calc_solar_pos` function.
 The centroids are needed because the `suntools` package requires point coordinates to calculate the solar position.
+The user must define the time in the format `as.POSIXct("yyyy-mm-dd hh:mm:ss", tz = "Europe/Berlin")`.
 }
 \examples{
 \dontrun{
@@ -37,7 +38,7 @@ building_sf <- st_sf(
 )
 
 # Specify the time for solar position calculation
-time <- as.POSIXct("2025-02-21 12:00:00", tz = "UTC")
+time <- as.POSIXct("2025-02-21 12:00:00", tz = "Europe/Berlin")
 
 # Calculate solar position
 solar_position <- sun_position(building_sf, time)

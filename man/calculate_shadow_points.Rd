@@ -2,21 +2,46 @@
 % Please edit documentation in R/calculate_shadow.R
 \name{calculate_shadow_points}
 \alias{calculate_shadow_points}
-\title{Calculate the shadow points of a building based on solar position and shadow length}
+\title{Calculate the Shadow Points of a Building Based on Solar Position and Shadow Length}
 \usage{
 calculate_shadow_points(building, solar_pos, shadow_length)
 }
 \arguments{
-\item{building}{sf object containing the geometry of a building (POLYGON geometry)}
+\item{building}{sf object containing the geometry of a building (POLYGON geometry).}
 
 \item{solar_pos}{Numeric vector of length 2, where the first element is the solar azimuth (in degrees)
-and the second element is the solar elevation (in degrees)}
+and the second element is the solar elevation (in degrees).}
 
-\item{shadow_length}{Numeric value representing the shadow length (in meters), calculated based on the building's height and solar elevation angle}
+\item{shadow_length}{Numeric value representing the shadow length (in meters), calculated based on the building's height and solar elevation angle.}
 }
 \value{
-sf object containing the shadow polygon geometry of the building
+sf object containing the shadow polygon geometry of the building.
 }
 \description{
-Calculate the shadow points of a building based on solar position and shadow length
+This function calculates the shadow points of a building based on the solar position (azimuth and elevation)
+and the shadow length. It takes an `sf` object containing the geometry of a building (POLYGON geometry),
+the solar position, and the shadow length, and returns an `sf` object containing the shadow polygon geometry.
+The function works by shifting the outline of the building in the direction of the shadow to create the shadow's corner points.
+}
+\examples{
+\dontrun{
+# Example usage
+library(sf)
+
+# Create example building geometry
+building <- st_sf(
+  geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE)))
+  ),
+  crs = 4326
+)
+
+# Define solar position and shadow length
+solar_pos <- c(180, 45)
+shadow_length <- 10
+
+# Calculate shadow points
+shadow_polygon <- calculate_shadow_points(building, solar_pos, shadow_length)
+print(shadow_polygon)
+}
 }

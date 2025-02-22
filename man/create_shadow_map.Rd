@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualization.R
 \name{create_shadow_map}
 \alias{create_shadow_map}
-\title{Create an interactive map showing buildings, shadows, and sunlight areas}
+\title{Create a map showing buildings, shadows, and sunlight areas}
 \usage{
 create_shadow_map(buildings_union, shadows, sunlight, time)
 }
@@ -19,5 +19,5 @@ create_shadow_map(buildings_union, shadows, sunlight, time)
 leaflet map object
 }
 \description{
-Create an interactive map showing buildings, shadows, and sunlight areas
+Create a map showing buildings, shadows, and sunlight areas
 }

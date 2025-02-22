@@ -1,74 +1,138 @@
-#' Process buildings and create shadow geometries
+#' Process Buildings by Validating and Filtering Geometries
 #'
-#' This function processes building geometries by checking for invalid geometries
-#' and filtering empty ones. Invalid geometries are corrected using `st_make_valid`
-#' and empty geometries are removed.
+#' This function processes building and shadow geometries by checking for invalid geometries
+#' and filtering out empty ones. Invalid geometries are corrected using `st_make_valid`
+#' and empty geometries are removed. This ensures that the building and shadow geometries are valid
+#' and ready for further processing.
 #'
 #' @param buildings sf object containing building geometries with a geometry column
-#' @importFrom sf st_make_valid st_is_empty st_geometry
+#'  and shadow geometries with a shadow_geometry columnn.
+#' @importFrom sf st_make_valid st_is_empty st_geometry st_is_valid
 #' @importFrom dplyr mutate filter
-#' @return sf object containing processed buildings
+#' @return sf object containing processed buildings with valid geometries.
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(sf)
+#'
+#' # Create example building geometries
+#' buildings <- st_sf(
+#'   part_id = c(1, 2),
+#'   geometry = st_sfc(
+#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+#'   ),
+#'   shadow_geometry = st_sfc(
+#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+#'   ),
+#'   crs = 4326
+#' )
+#'
+#' # Process buildings to ensure valid geometries
+#' processed_buildings <- process_buildings(buildings)
+#' print(processed_buildings)
+#' }
 process_buildings <- function(buildings) {
 
-  # Überprüfe, ob ungültige oder leere Geometrien vorhanden sind
-  invalid_geom <- st_is_valid(st_geometry(buildings)) == FALSE
-  empty_geom <- st_is_empty(st_geometry(buildings)) == TRUE
+  # Check for invalid or empty geometries
+  invalid_geom_bld <- st_is_valid(st_geometry(buildings)) == FALSE
+  invalid_geom_sh <- st_is_valid(st_geometry(buildings$shadow_geometry)) == FALSE
 
-  message(sum(invalid_geom), " invalid geometries detected.")
-  message(sum(empty_geom), " empty geometries detected.")
+  empty_geom_bld <- st_is_empty(st_geometry(buildings)) == TRUE
+  empty_geom_sh <- st_is_empty(st_geometry(buildings$shadow_geometry)) == TRUE
 
-  # Falls ungültige oder leere Geometrien existieren, validiere und filtere nur diese
-  if (sum(invalid_geom) > 0) {
-    # message("Validating invalid geometries...")
-    buildings[invalid_geom, "geometry"] <- st_make_valid(st_geometry(buildings[invalid_geom, ]))
+  message(sum(invalid_geom_bld), " invalid building geometries detected.")
+  message(sum(invalid_geom_sh), " invalid shadow geometries detected.")
+  message(sum(empty_geom_bld), " empty building geometries detected.")
+  message(sum(empty_geom_sh), " empty shadow geometries detected.")
+
+  # Validate invalid geometries
+  if (sum(invalid_geom_bld) > 0) {
+    buildings[invalid_geom_bld, "geometry"] <- st_make_valid(st_geometry(buildings[invalid_geom_bld, ]))
+  }
+  if (sum(invalid_geom_sh) > 0) {
+    buildings[invalid_geom_sh, "shadow_geometry"] <- st_make_valid(st_geometry(buildings$shadow_geometry[invalid_geom_sh, ]))
   }
 
-  # Filtere leere Geometrien
-  if (sum(empty_geom) > 0) {
-    # message("Filtering empty geometries...")
-    buildings <- buildings[!empty_geom, ]
+  # Filter out empty geometries
+  if (sum(empty_geom_bld) > 0) {
+    buildings <- buildings[!empty_geom_bld, ]
+  }
+  if (sum(empty_geom_sh) > 0) {
+    buildings <- buildings[!empty_geom_sh, ]
   }
 
   return(buildings)
 }
 
 
-#' Create shadow polygons from buildings
+#' Create Shadow Polygons from Buildings
 #'
-#' @param buildings sf object containing processed buildings
-#' @param batch_size integer number of buildings to process in each batch
-#' @return sf object containing dissolved shadow polygons
+#' This function creates shadow polygons from building geometries. It processes the buildings in batches,
+#' validates the geometries, and calculates the convex hull of the combined building and shadow geometries.
+#' The resulting shadow polygons are then dissolved into a single geometry.
+#'
+#' The function works as follows:
+#' 1. Processes the buildings in batches to manage memory usage and performance.
+#' 2. For each building in the batch, it combines the building geometry with its shadow geometry.
+#' 3. Calculates the convex hull of the combined geometry to create the shadow polygon.
+#' 4. Collects all valid shadow polygons and dissolves them into a single geometry.
+#'
+#' @param buildings sf object containing processed buildings with valid geometries and shadow geometries.
+#' @param batch_size integer number of buildings to process in each batch.
+#' @return sf object containing dissolved shadow polygons.
+#' @importFrom sf st_make_valid st_is_valid st_is_empty st_union st_convex_hull st_sfc st_crs
+#' @importFrom dplyr summarise
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(sf)
+#'
+#' # Create example building geometries
+#' buildings <- st_sf(
+#'   part_id = c(1, 2),
+#'   geometry = st_sfc(
+#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+#'   ),
+#'   shadow_geometry = st_sfc(
+#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+#'   ),
+#'   crs = 4326
+#' )
+#'
+#' # Create shadow polygons from buildings
+#' shadow_polygons <- create_shadow_polygons(buildings, batch_size = 1)
+#' print(shadow_polygons)
+#' }
 create_shadow_polygons <- function(buildings, batch_size) {
   message("Creating shadow polygons...")
-
-  # Vorvalidierung aller Geometrien (falls noch nicht erfolgt)
-  buildings$geometry <- st_make_valid(buildings$geometry)
-  buildings$shadow_geometry <- st_make_valid(buildings$shadow_geometry)
 
   final_polygons <- vector("list", nrow(buildings))
   final_part_ids <- vector("character", nrow(buildings))
   valid_count <- 0
 
-  # Batchweise Verarbeitung
+  # Process in batches
   for (batch_start in seq(1, nrow(buildings), by = batch_size)) {
     batch_end <- min(batch_start + batch_size - 1, nrow(buildings))
     message(sprintf("Processing batch %d to %d", batch_start, batch_end))
 
-    # Verarbeitung jedes Gebäudes im Batch
+    # Process each building in the batch
     for (i in batch_start:batch_end) {
       current_part_id <- buildings$part_id[i]
       tryCatch({
-        # Direkter Zugriff auf die Geometrien, da diese bereits validiert wurden
         bldg_geom <- buildings$geometry[i]
         shadow_geom <- buildings$shadow_geometry[i]
 
-        # Vereinigung der Geometrien und Berechnung der konvexen Hülle in einem Schritt
+        # Union of geometries and convex hull calculation
         combined_geom <- st_union(bldg_geom, shadow_geom)
         hull <- st_convex_hull(combined_geom)
 
-        # Speichern, falls das Ergebnis gültig und nicht leer ist
+        # Save if valid and not empty
         if (st_is_valid(hull) && !st_is_empty(hull)) {
           valid_count <- valid_count + 1
           final_polygons[[valid_count]] <- hull
@@ -86,7 +150,7 @@ create_shadow_polygons <- function(buildings, batch_size) {
     final_polygons <- final_polygons[1:valid_count]
     final_part_ids <- final_part_ids[1:valid_count]
 
-    # Erstellen des sf-Objekts und Zusammenführen der Polygone
+    # Create sf object and dissolve polygons
     shadow_polygons <- st_sf(
       part_id = final_part_ids,
       geometry = st_sfc(do.call(c, final_polygons), crs = st_crs(buildings))
@@ -100,12 +164,41 @@ create_shadow_polygons <- function(buildings, batch_size) {
 }
 
 
-#' Create sunlight areas by subtracting buildings and shadows from a bounding box
+
+#' Create Sunlight Areas by Subtracting Buildings and Shadows from a Bounding Box
 #'
-#' @param buildings sf object containing building polygons
-#' @param shadows sf object containing shadow polygons
-#' @return sf object containing sunlight areas
+#' This function creates sunlight areas by subtracting the building and shadow geometries from a bounding box.
+#'
+#' @param buildings sf object containing building polygons.
+#' @param shadows sf object containing shadow polygons.
+#' @return sf object containing sunlight areas.
+#' @importFrom sf st_as_sfc st_bbox st_union st_difference
 #' @export
+#'
+#' @examples
+#' \dontrun{
+#' library(sf)
+#'
+#' # Create example building and shadow geometries
+#' buildings <- st_sf(
+#'   geometry = st_sfc(
+#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+#'   ),
+#'   crs = 4326
+#' )
+#' shadows <- st_sf(
+#'   geometry = st_sfc(
+#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+#'   ),
+#'   crs = 4326
+#' )
+#'
+#' # Create sunlight areas
+#' sunlight_areas <- create_sunlight_areas(buildings, shadows)
+#' print(sunlight_areas)
+#' }
 create_sunlight_areas <- function(buildings, shadows) {
   bbox <- st_as_sfc(st_bbox(buildings))  # Convert bounding box to polygon
 
@@ -114,35 +207,3 @@ create_sunlight_areas <- function(buildings, shadows) {
 
   st_difference(bbox, st_union(buildings_union, shadows_union))  # Subtract buildings & shadows
 }
-
-
-#' Create a time control HTML element for the map
-#'
-#' @param time POSIXct object representing the time
-#' @return character string containing HTML for the time control
-#' @export
-create_time_control <- function(time) {
-  formatted_date <- format(time, "%Y-%m-%d")
-  formatted_time <- format(time, "%H:%M")
-  time_zone <- format(time, "%Z")
-
-  sprintf(
-    '<div style="
-      background-color: white;
-      padding: 8px;
-      border-radius: 4px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-      margin: 10px;
-    ">
-      <strong>Shadow Forecast</strong><br>
-      Date: %s<br>
-      Time: %s %s
-    </div>',
-    formatted_date,
-    formatted_time,
-    time_zone
-  )
-}
-

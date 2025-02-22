@@ -10,7 +10,7 @@
 #'
 #' @import xml2 dplyr purrr sf
 #'
-#' @return A simple feature (sf) object containing polygons with their coordinates, `part_id`, and `measuredHeight`
+#' @return A simple feature (sf) object containing polygons with their geometry, `part_id`, and `measuredHeight`
 #' @export
 #'
 #' @examples

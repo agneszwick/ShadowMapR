@@ -2,18 +2,43 @@
 % Please edit documentation in R/create_shadow_geometry.R
 \name{create_sunlight_areas}
 \alias{create_sunlight_areas}
-\title{Create sunlight areas by subtracting buildings and shadows from a bounding box}
+\title{Create Sunlight Areas by Subtracting Buildings and Shadows from a Bounding Box}
 \usage{
 create_sunlight_areas(buildings, shadows)
 }
 \arguments{
-\item{buildings}{sf object containing building polygons}
+\item{buildings}{sf object containing building polygons.}
 
-\item{shadows}{sf object containing shadow polygons}
+\item{shadows}{sf object containing shadow polygons.}
 }
 \value{
-sf object containing sunlight areas
+sf object containing sunlight areas.
 }
 \description{
-Create sunlight areas by subtracting buildings and shadows from a bounding box
+This function creates sunlight areas by subtracting the building and shadow geometries from a bounding box.
+}
+\examples{
+\dontrun{
+library(sf)
+
+# Create example building and shadow geometries
+buildings <- st_sf(
+  geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  ),
+  crs = 4326
+)
+shadows <- st_sf(
+  geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  ),
+  crs = 4326
+)
+
+# Create sunlight areas
+sunlight_areas <- create_sunlight_areas(buildings, shadows)
+print(sunlight_areas)
+}
 }

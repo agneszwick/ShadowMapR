@@ -12,7 +12,7 @@ extract_gml_polygons(gml_file, crs_code)
 \item{crs_code}{Character string. The coordinate reference system (CRS) code to be used.}
 }
 \value{
-A simple feature (sf) object containing polygons with their coordinates, `part_id`, and `measuredHeight`
+A simple feature (sf) object containing polygons with their geometry, `part_id`, and `measuredHeight`
 }
 \description{
 This function reads a GML file, extracts polygons from `<gml:posList>` elements

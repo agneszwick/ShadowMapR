@@ -2,18 +2,50 @@
 % Please edit documentation in R/create_shadow_geometry.R
 \name{create_shadow_polygons}
 \alias{create_shadow_polygons}
-\title{Create shadow polygons from buildings}
+\title{Create Shadow Polygons from Buildings}
 \usage{
 create_shadow_polygons(buildings, batch_size)
 }
 \arguments{
-\item{buildings}{sf object containing processed buildings}
+\item{buildings}{sf object containing processed buildings with valid geometries and shadow geometries.}
 
-\item{batch_size}{integer number of buildings to process in each batch}
+\item{batch_size}{integer number of buildings to process in each batch.}
 }
 \value{
-sf object containing dissolved shadow polygons
+sf object containing dissolved shadow polygons.
 }
 \description{
-Create shadow polygons from buildings
+This function creates shadow polygons from building geometries. It processes the buildings in batches,
+validates the geometries, and calculates the convex hull of the combined building and shadow geometries.
+The resulting shadow polygons are then dissolved into a single geometry.
+}
+\details{
+The function works as follows:
+1. Processes the buildings in batches to manage memory usage and performance.
+2. For each building in the batch, it combines the building geometry with its shadow geometry.
+3. Calculates the convex hull of the combined geometry to create the shadow polygon.
+4. Collects all valid shadow polygons and dissolves them into a single geometry.
+}
+\examples{
+\dontrun{
+library(sf)
+
+# Create example building geometries
+buildings <- st_sf(
+  part_id = c(1, 2),
+  geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  ),
+  shadow_geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  ),
+  crs = 4326
+)
+
+# Create shadow polygons from buildings
+shadow_polygons <- create_shadow_polygons(buildings, batch_size = 1)
+print(shadow_polygons)
+}
 }

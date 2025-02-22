@@ -1,11 +1,17 @@
 Package: ShadowMapR
 Type: Package
-Title: Create and visualize building shadow maps
+Title: Create and Visualize Building Shadow Maps
 Version: 0.1.0
 Author: Agnes Zwick
-Maintainer: The package maintainer <agnes.zwick@stud-mail.uni-wuerzburg.de>
-Description: This package allows users to calculate and visualize building shadows, 
+Maintainer: Agnes Zwick <agnes.zwick@stud-mail.uni-wuerzburg.de>
+Description: This package allows users to calculate and visualize building shadows,
     including sunlight and shadow areas, using XML data and geographical information.
+    It is designed to work with 3D building models in LoD0 and LoD2 formats from Germany (LoD0-DE and LoD2-DE).
+    The package provides functions to calculate the centroids of building geometries,
+    determine the solar position for these centroids, and visualize the resulting shadow maps.
+    Users can calculate the shadow cast for specific times or generate an hourly progression of shadows over a day.
+    Additionally, the package includes tools for visualizing the shadow maps using the `leaflet` package.
+    This package doesn't account for terrain or vegetation shadows. It assumes the buildings are all placed on a flat surface.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true

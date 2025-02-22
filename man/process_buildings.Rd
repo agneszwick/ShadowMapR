@@ -2,18 +2,43 @@
 % Please edit documentation in R/create_shadow_geometry.R
 \name{process_buildings}
 \alias{process_buildings}
-\title{Process buildings and create shadow geometries}
+\title{Process Buildings by Validating and Filtering Geometries}
 \usage{
 process_buildings(buildings)
 }
 \arguments{
-\item{buildings}{sf object containing building geometries with a geometry column}
+\item{buildings}{sf object containing building geometries with a geometry column
+and shadow geometries with a shadow_geometry columnn.}
 }
 \value{
-sf object containing processed buildings
+sf object containing processed buildings with valid geometries.
 }
 \description{
-This function processes building geometries by checking for invalid geometries
-and filtering empty ones. Invalid geometries are corrected using `st_make_valid`
-and empty geometries are removed.
+This function processes building and shadow geometries by checking for invalid geometries
+and filtering out empty ones. Invalid geometries are corrected using `st_make_valid`
+and empty geometries are removed. This ensures that the building and shadow geometries are valid
+and ready for further processing.
+}
+\examples{
+\dontrun{
+library(sf)
+
+# Create example building geometries
+buildings <- st_sf(
+  part_id = c(1, 2),
+  geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  ),
+  shadow_geometry = st_sfc(
+    st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
+    st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
+  ),
+  crs = 4326
+)
+
+# Process buildings to ensure valid geometries
+processed_buildings <- process_buildings(buildings)
+print(processed_buildings)
+}
 }
