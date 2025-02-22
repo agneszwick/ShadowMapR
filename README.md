@@ -25,8 +25,31 @@ This package **does not** account for **terrain elevation** or **vegetation shad
 remotes::install_github("agneszwick/ShadowMapR")
 ```
 ## Example
+### Use example file 
 ```r
-#Load package
+# Load package
+library(ShadowMapR)
+
+# Process example file
+building_sf <- get_example_data()
+
+# CRS code detected: 
+# Processing XML file: 
+# XML extraction completed in 7.66 seconds.
+# Number of geometries before validation: 1057
+# Number of geometries after validation: 214
+# Number of valid geometries after simplification: 182
+# Convert to 2D completed in 0.3 seconds.
+# Number of valid geometries after cleaning: 90
+# Cleaning completed in 1.88 seconds.
+
+# Visualize building_sf in leaflet map
+visualize_buildings(building_sf)
+```
+
+### Use your own file(s)
+```r
+# Load package
 library(ShadowMapR)
 
 # Define file path
