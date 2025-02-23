@@ -30,25 +30,74 @@ This package **does not** account for **terrain elevation** or **vegetation shad
 remotes::install_github("agneszwick/ShadowMapR")
 ```
 ## Example
-### Use example file 
+
 ```r
 # Load package
 library(ShadowMapR)
 
+# Define file path
+file_path <- "path/to/your/xml/or/gml/file"
+
+# Extract crs of file
+crs_code <- extract_crs(file_path)
+print(crs)
+# (e.g.) 25832 
+
+# Process xml/gml file and create simple feature 
+building_sf <- load_building_data(file_path, crs_code)
+```
+
+**`load_building_data`**
+
+@param *path*: Path to the directory or file containing the files.
+
+@param *crs_code*: Character string. The coordinate reference system (CRS) code to be used.
+
+- `.gml` file
+  - `extract_gml_polygons`: reads a `.gml` file and extracts *geometry* and *measuredHeight* of buildings
+  - **Result:** Simple feature with *part_id*, *geometry* and *height* column
+ 
+- `.xml` file
+  - `extract_xml_polygons`: Creates data frame of building data from an XML file
+  - `convert_to_2D`: Creates simple feature of 2D building polygons
+  - `clean_building_polygons`: Clean building polygon geometries by grouping and summarizing them
+  - **Result:** Simple feature with *bldg_id*, *part_id*, *geometry*, *height* and *file* column
+
+
+**Alternative with example file**
+```r
 # Process example file
 building_sf <- get_example_data()
-# >print(building_sf)
-# EINFÜGEN!!!
+
+# > print(building_sf)
+# Simple feature collection with 91 features and 4 fields
+# Geometry type: POLYGON
+# Dimension:     XY
+# Bounding box:  xmin: 370231.4 ymin: 5808336 xmax: 370921.3 ymax: 5808949
+# Projected CRS: ETRS89 / UTM zone 33N
+# # A tibble: 91 × 5
+#    part_id                                                   geometry height bldg_id file 
+#  * <chr>                                                <POLYGON [m]>  <dbl> <chr>   <chr>
+#  1 DEBE06YYD00000lo_01 ((370455.6 5808769, 370461 5808772, 370462.2 …   3.37 DEBE06… exam…
+#  2 DEBE06YYD00001AQ    ((370571.2 5808740, 370584.9 5808743, 370587.…   8.00 DEBE06… exam…
+#  3 DEBE06YYD00001Ai_01 ((370551.1 5808764, 370559.8 5808766, 370562.…   7.99 DEBE06… exam…
+#  4 DEBE06YYD00001Gw    ((370538.5 5808760, 370547.2 5808763, 370549.…   8.50 DEBE06… exam…
+#  5 DEBE06YYD00001hw_01 ((370555 5808436, 370560 5808443, 370589.2 58…  21.2  DEBE06… exam…
+#  6 DEBE06YYD00001hw_02 ((370582.5 5808413, 370589 5808423, 370600.5 …   5.27 DEBE06… exam…
+#  7 DEBE06YYD00001hw_03 ((370574.9 5808452, 370581.2 5808461, 370582.…   7.49 DEBE06… exam…
+#  8 DEBE06YYD00001hw_04 ((370584.6 5808399, 370590.2 5808407, 370606.…  12.2  DEBE06… exam…
+#  9 DEBE06YYD00001hw_05 ((370554.2 5808439, 370557.6 5808444, 370558.…  10.2  DEBE06… exam…
+# 10 DEBE06YYD00002gi    ((370395.3 5808737, 370395.5 5808738, 370396 …   6.37 DEBE06… exam…
+# # ℹ 81 more rows
+# # ℹ Use `print(n = ...)` to see more rows
+
 ```
-**`get_example_data()`**
+**`get_example_data()`** 
+
 1. Set file path to example.xml
 2. Extract CRS code from the example `extract_crs`
-3. Following functions are for .xml-files (example.xml):
-   - `extract_xml_polygons`: Creates data frame of building data from an XML file 
-   - `convert_to_2D`: Creates simple feature of 2D building polygons
-   - `clean_building_polygons`: Clean building polygon geometries by grouping and summarizing them
+3. Runs `load_building_data`
 
-**Result:** Simple feature with *bldg_id*, *part_id*, *geometry*, *height* and *file* column
 
 ```r
 visualize_buildings(building_sf)
@@ -82,14 +131,16 @@ building_sf <- sun_position(building_sf, time)
 # # ℹ 1 more variable: centroid_lat <dbl>
 ```
 **`sun_position(building_sf, time)`**
-This function calculates the solar position for the provided building data and time. It takes an `sf` object containing building polygons, calculates the centroids of these polygons using the `calc_centroids` function, and then calculates the solar position for these centroids using the `calc_solar_pos` function.
 
-**Input:**
-- `building_sf`: An sf object containing building geometries.
-- `time`: A POSIXct object representing the time for which to calculate the solar position.
+@param *building_sf*: An sf object containing building geometries.
 
-**Output:**
-- An `sf` object containing building geometries and solar positions (*sol_azimuth* and *sol_elevation*).
+@param *time*: A POSIXct object representing the time for which to calculate the solar position.
+
+This function calculates the solar position for the provided building data and time. 
+
+- `calc_centroids`: Calculates centroids of sf polygons
+- `calc_solar_pos`: Calculates solar position (*sol_azimuth* and *sol_elevation*) of the centroids
+- **Result:** An `sf` object containing building geometries and solar positions (*sol_azimuth* and *sol_elevation*).
 
 
 ```r
@@ -118,6 +169,7 @@ plot(st_geometry(building_offset), add = TRUE, col = "black", lwd = 2)
 <img src="images/building_offset.png" alt="Building offset" width="600" height="400">
 
 **`calculate_all_shadows`**
+
 The function shifts the outline of a building by creating a vector for each corner in the direction of the shadow to create the shadow's corner points.
 The vector is calculated based on the building's height, solar azimuth, and solar elevation. It returns an `sf` object containing the buildings with an additional column *shadow_geometry*.
 
@@ -131,26 +183,18 @@ The vector is calculated based on the building's height, solar azimuth, and sola
 ```r
 shadow_map <- create_building_shadow_map(building_offset, time, batch_size = 100)
 ```
+This image is a screenshot of the interactive Leaflet map showing the final result.
+
 <img src="images/shadow_map.png" alt="Visualization Example" width="600" height="400">
+
+
+
 **`create_building_shadow_map`**
 
 
 ### Use your own file(s)
 
-```r
-# Load package
-library(ShadowMapR)
 
-# Define file path
-file_path <- "path/to/your/xml/or/gml/file"
-
-# Extract crs of file
-crs_code <- extract_crs(file_path)
-print(crs)
-# (e.g.) 25832 
-
-# Process xml/gml file and create simple feature 
-building_sf <- load_building_data(file_path, crs_code)
 
 # Visualize building_sf in leaflet map
 visualize_buildings(building_sf)
