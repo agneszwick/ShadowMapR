@@ -25,7 +25,7 @@ calculate_hourly_shadows <- function(solar_results) {
   # Apply the calculate_all_shadows function to each hourly solar data
   lapply(solar_results, function(hourly_data) {
     # Ensure that calculate_all_shadows is defined and works on the given data
-    calculate_all_shadows(hourly_data)
+    BuildingWithShadowOffset(hourly_data)
   })
 }
 

@@ -68,52 +68,58 @@ process_buildings <- function(buildings) {
 }
 
 
-#' Create Shadow Polygons from Buildings
+#' Compute Shadow Hulls for Buildings with Batch Processing
 #'
-#' This function creates shadow polygons from building geometries. It processes the buildings in batches,
-#' validates the geometries, and calculates the convex hull of the combined building and shadow geometries.
-#' The resulting shadow polygons are then dissolved into a single geometry.
+#' This function calculates the convex hull of each building's combined geometry (building footprint + shadow geometry).
+#' The convex hull is a minimal enclosing polygon that contains all the points of the combined geometries. The function
+#' processes each building in batches, merging the building footprint and its shadow geometry, then calculating the convex
+#' hull of the combined geometry. Only valid and non-empty convex hulls are returned.
 #'
-#' The function works as follows:
-#' 1. Processes the buildings in batches to manage memory usage and performance.
-#' 2. For each building in the batch, it combines the building geometry with its shadow geometry.
-#' 3. Calculates the convex hull of the combined geometry to create the shadow polygon.
-#' 4. Collects all valid shadow polygons and dissolves them into a single geometry.
+#' The function performs the following steps for each building:
+#' - Retrieves the building and shadow geometries.
+#' - Unions the building footprint with the shadow geometry.
+#' - Computes the convex hull of the resulting unioned geometry.
+#' - Checks if the resulting convex hull is valid and non-empty.
+#' - Collects all valid convex hulls with their corresponding building part IDs for final output.
 #'
-#' @param buildings sf object containing processed buildings with valid geometries and shadow geometries.
-#' @param batch_size integer number of buildings to process in each batch.
-#' @return sf object containing dissolved shadow polygons.
-#' @importFrom sf st_make_valid st_is_valid st_is_empty st_union st_convex_hull st_sfc st_crs
-#' @importFrom dplyr summarise
+#' If any error occurs while processing a particular building, the function will skip that building and print an error message.
+#' Additionally, if no valid convex hulls are generated, an error will be raised.
+#'
+#' @param buildings An `sf` object of class `sf` containing the geometries of buildings, where:
+#'   - The `geometry` column contains the building footprint geometries (as `sfc` objects).
+#'   - The `shadow_geometry` column contains the shadow geometry associated with each building.
+#'   - The `part_id` column contains a unique identifier for each building part.
+#' @param batch_size The number of buildings to process in each batch. Default is 50.
+#'
+#' @return An `sf` object of class `sf` containing:
+#'   - A `part_id` column that identifies the building parts.
+#'   - A `geometry` column containing the convex hulls of the union of each building's footprint and shadow geometry,
+#'     as `sfc` objects (simple features geometry list-column).
+#'
+#' @details The function ensures that only valid and non-empty convex hulls are included in the result. If any hull is invalid
+#' or empty, it is skipped, and a message is printed to inform the user. If no valid convex hulls are generated, the function
+#' will stop and raise an error.
+#'
+#' The `st_union` and `st_convex_hull` functions from the `sf` package are used to compute the combined geometry and convex hull.
+#' The `st_is_valid` function is used to ensure the hull is a valid geometry, and `st_is_empty` is used to check if the resulting
+#' hull is non-empty.
+#'
+#' @importFrom sf st_union st_convex_hull st_is_valid st_is_empty st_sfc st_crs
 #' @export
 #'
 #' @examples
-#' \dontrun{
-#' library(sf)
+#' # Example of using the compute_shadow_hulls function
+#' # Assuming 'buildings_sf' is an existing sf object containing building and shadow geometries
+#' shadow_hulls <- compute_shadow_hulls(buildings_sf)
 #'
-#' # Create example building geometries
-#' buildings <- st_sf(
-#'   part_id = c(1, 2),
-#'   geometry = st_sfc(
-#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
-#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
-#'   ),
-#'   shadow_geometry = st_sfc(
-#'     st_polygon(list(matrix(c(0, 0, 1, 1, 1, 0, 0, 0), ncol = 2, byrow = TRUE))),
-#'     st_polygon(list(matrix(c(1, 1, 2, 2, 2, 1, 1, 1), ncol = 2, byrow = TRUE)))
-#'   ),
-#'   crs = 4326
-#' )
+#' # Plot the resulting shadow hulls
+#' plot(shadow_hulls$geometry)
 #'
-#' # Create shadow polygons from buildings
-#' shadow_polygons <- create_shadow_polygons(buildings, batch_size = 1)
-#' print(shadow_polygons)
-#' }
-create_shadow_polygons <- function(buildings, batch_size) {
-  message("Creating shadow polygons...")
+compute_shadow_hulls <- function(buildings, batch_size = 50) {
+  message("Computing shadow hulls...")
 
-  final_polygons <- vector("list", nrow(buildings))
-  final_part_ids <- vector("character", nrow(buildings))
+  shadow_hulls <- vector("list", nrow(buildings))
+  part_ids <- vector("character", nrow(buildings))
   valid_count <- 0
 
   # Process in batches
@@ -132,13 +138,13 @@ create_shadow_polygons <- function(buildings, batch_size) {
         combined_geom <- st_union(bldg_geom, shadow_geom)
         hull <- st_convex_hull(combined_geom)
 
-        # Save if valid and not empty
+        # Save valid hulls
         if (st_is_valid(hull) && !st_is_empty(hull)) {
           valid_count <- valid_count + 1
-          final_polygons[[valid_count]] <- hull
-          final_part_ids[valid_count] <- current_part_id
+          shadow_hulls[[valid_count]] <- hull
+          part_ids[valid_count] <- current_part_id
         } else {
-          message("Invalid or empty hull created for building ", current_part_id)
+          message("Invalid or empty hull for building ", current_part_id)
         }
       }, error = function(e) {
         message(sprintf("Error processing building %s: %s", current_part_id, e$message))
@@ -147,20 +153,48 @@ create_shadow_polygons <- function(buildings, batch_size) {
   }
 
   if (valid_count > 0) {
-    final_polygons <- final_polygons[1:valid_count]
-    final_part_ids <- final_part_ids[1:valid_count]
-
-    # Create sf object and dissolve polygons
-    shadow_polygons <- st_sf(
-      part_id = final_part_ids,
-      geometry = st_sfc(do.call(c, final_polygons), crs = st_crs(buildings))
-    ) %>%
-      summarise(geometry = st_union(geometry))
-
-    return(shadow_polygons)
+    return(st_sf(
+      part_id = part_ids[1:valid_count],
+      geometry = st_sfc(do.call(c, shadow_hulls), crs = st_crs(buildings))
+    ))
   } else {
-    stop("No valid shadow polygons were created.")
+    stop("No valid shadow hulls were created.")
   }
+}
+
+
+#' Dissolve Shadow Polygons into a Single Geometry
+#'
+#' This function dissolves multiple shadow hull polygons into a single unified geometry
+#' by applying a union operation to all the shadow geometries in the input. It is useful for
+#' combining overlapping or adjacent shadow areas into one boundary.
+#'
+#' @param shadow_hulls An `sf` object containing shadow hull geometries. The `geometry` column
+#'   should include individual shadow polygons.
+#'
+#' @return An `sf` object with a single geometry representing the union of all shadow polygons.
+#'
+#' @details The function uses `st_union` to combine the geometries. If no valid geometries are present
+#'   in the input, an error is raised.
+#'
+#' @importFrom sf st_union
+#' @importFrom dplyr summarise
+#' @export
+#'
+#' @examples
+#' # Example usage:
+#' dissolved_shadow <- dissolve_shadow_polygons(shadow_hulls_sf)
+#' plot(dissolved_shadow$geometry)
+#'
+dissolve_shadow_polygons <- function(shadow_hulls) {
+  message("Dissolving shadow polygons...")
+
+  if (nrow(shadow_hulls) == 0) {
+    stop("No shadow hulls available for dissolving.")
+  }
+
+  return(shadow_hulls %>%
+           summarise(geometry = st_union(geometry)))
 }
 
 
