@@ -1,11 +1,23 @@
-#' Visualize building geometries with Leaflet
+#' Visualize Building Geometries with Leaflet
+#'
+#' This function generates an interactive map using the `leaflet` package to visualize building geometries. Each building is represented by polygons, with colors indicating building heights. The map provides a popup showing the building ID when a user clicks on a building.
+#'
+#' @param building_sf sf object containing building geometries. This should be an `sf` object with columns for `height` (building height) and `part_id` (building ID or any other unique identifier for buildings).
 #'
 #' @importFrom leaflet leaflet addTiles addPolygons colorQuantile
-#' @param building_sf sf object containing building geometries with height and building ID
+#' @importFrom sf st_transform
 #'
-#' @importFrom leaflet leaflet addTiles addPolygons
+#' @return A `leaflet` map object displaying building geometries with colors based on height and popups showing building IDs.
 #'
-#' @return A leaflet map object showing building geometries
+#' @details
+#' The `visualize_buildings` function visualizes the spatial distribution of buildings with varying heights. The buildings are colored according to their height using a color palette from the `YlOrRd` scale. The map also includes a popup for each building that displays its `part_id` value (which could be used to uniquely identify each building).
+#'
+#' @examples
+#' \dontrun{
+#' # Assuming you have an sf object with building geometries, height, and part_id.
+#' visualize_buildings(building_sf)
+#' }
+#'
 #' @export
 visualize_buildings <- function(building_sf) {
   # Transform CRS for Leaflet (WGS84 - EPSG:4326)
@@ -21,7 +33,7 @@ visualize_buildings <- function(building_sf) {
       color = NA,
       weight = 1,
       popup = ~as.character(part_id)
-      )
+    )
 }
 
 
@@ -176,20 +188,51 @@ create_time_control <- function(time) {
 }
 
 
-
-
-
-#' Create a map showing buildings, shadows, and sunlight areas
+#' Create a Map Visualizing Buildings, Shadows, and Sunlight Areas
 #'
-#' @param buildings_union sf object containing the merged building polygons
-#' @param shadows sf object containing shadow polygons
-#' @param sunlight sf object containing sunlight areas
-#' @param time POSIXct object representing the time
-#' @importFrom leaflet setView
-#' @return leaflet map object
+#' This function generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
+#' The map allows users to toggle between different layers for buildings, shadows, and sunlight areas.
+#' The function also adds a time control in the bottom-right corner of the map, which could be used for dynamic time-based visualizations.
+#'
+#' @param building_sf sf object containing merged building polygons (e.g., `sf` object with the geometry of buildings).
+#' @param shadows sf object containing shadow polygons (e.g., `sf` object with the geometry representing shadow areas).
+#' @param sunlight sf object containing sunlight polygons (e.g., `sf` object with the geometry representing areas under sunlight).
+#' @param time POSIXct object representing the time of day when the map is generated (this could be used for dynamic updates or time-based visualization controls).
+#'
+#' @importFrom leaflet setView addProviderTiles addPolygons addLayersControl addControl
+#' @importFrom sf st_transform st_coordinates st_centroid st_make_valid st_simplify
+#'
+#' @return A `leaflet` map object with layers for buildings, shadows, and sunlight, along with a time control at the bottom-right.
+#'
+#' @details
+#' The `create_shadow_map` function provides a visual representation of buildings, shadows, and sunlight areas in a geographic region.
+#' It allows users to interact with the map by toggling layers and exploring the spatial relationships between buildings and their shadows under different sunlight conditions.
+#' The map is initialized at the centroid of the building polygons.
+#'
+#' @examples
+#' \dontrun{
+#' # Assuming you have `sf` objects: building_sf, shadows, sunlight, and a time object.
+#' create_shadow_map(building_sf, shadows, sunlight, Sys.time())
+#' }
+#'
 #' @export
-create_shadow_map <- function(buildings_union, shadows, sunlight, time) {
+create_shadow_map <- function(building_sf, shadows, sunlight, time) {
+
+  # Ensure all geometries are valid and simplified
+  building_sf <- st_make_valid(building_sf)
+  building_sf <- st_simplify(building_sf, dTolerance = 0.0001)
+
+  shadows <- st_make_valid(shadows)
+  shadows <- st_simplify(shadows, dTolerance = 0.0001)
+
+  sunlight <- st_make_valid(sunlight)
+  sunlight <- st_simplify(sunlight, dTolerance = 0.0001)
+
+  # Disable S2 processing
+  sf::sf_use_s2(FALSE)
+
   # Transform to WGS84
+  buildings_union <- st_union(building_sf)
   buildings_wgs84 <- st_transform(buildings_union, 4326)
   shadows_wgs84 <- st_transform(shadows, 4326)
   sunlight_wgs84 <- st_transform(sunlight, 4326)
@@ -201,7 +244,7 @@ create_shadow_map <- function(buildings_union, shadows, sunlight, time) {
       fillColor = "#FFFF80",
       fillOpacity = 0.3,
       weight = 0,
-      color=NA,
+      color = NA,
       group = "Sunlight"
     ) %>%
     addPolygons(
@@ -209,7 +252,7 @@ create_shadow_map <- function(buildings_union, shadows, sunlight, time) {
       fillColor = "grey",
       fillOpacity = 0.3,
       weight = 0,
-      color= NA,
+      color = NA,
       group = "Shadows"
     ) %>%
     addPolygons(
@@ -229,106 +272,8 @@ create_shadow_map <- function(buildings_union, shadows, sunlight, time) {
       position = "bottomright"
     ) %>%
     setView(
-      lng = mean(st_coordinates(st_centroid(buildings_wgs84))[,1]),
-      lat = mean(st_coordinates(st_centroid(buildings_wgs84))[,2]),
-      zoom = 17
+      lng = mean(st_coordinates(st_centroid(buildings_wgs84))[, 1]),
+      lat = mean(st_coordinates(st_centroid(buildings_wgs84))[, 2]),
+      zoom = 16
     )
-}
-
-
-
-
-#' Main function to process buildings and create an interactive shadow map
-#'
-#' This function processes building geometries, calculates shadow polygons for each building,
-#' and creates an interactive shadow map using the Leaflet package. The process involves calculating
-#' the convex hulls of building footprints and their respective shadow geometries, then dissolving
-#' the individual shadow polygons. Sunlight areas are then computed, and finally, the shadow map is
-#' generated based on the given time.
-#'
-#' The process is executed in batches to manage memory usage, and each stage of the process is timed
-#' to provide performance feedback.
-#'
-#' @param buildings A simple features (sf) object containing building geometries, where:
-#'   - The `geometry` column contains the building footprints (as `sfc` objects).
-#'   - The `shadow_geometry` column contains the shadow geometries associated with each building.
-#' @param time A POSIXct object representing the specific time at which the shadow calculation is to be
-#'   performed. This time is used to adjust the shadow angles and determine shadow positions.
-#' @param batch_size An integer specifying the number of buildings to process in each batch. Default is 50.
-#'
-#' @return A `leaflet` map object that visualizes the building shadows and sunlight areas, allowing the user
-#'   to interactively explore the shadows based on the provided time.
-#'
-#' @details
-#' The function sequentially performs the following steps:
-#' 1. Processes building geometries.
-#' 2. Computes the convex hulls of the union of each building's footprint and shadow geometry.
-#' 3. Dissolves the individual shadow polygons to form a consolidated shadow area.
-#' 4. Creates sunlight areas based on the processed buildings and shadow geometries.
-#' 5. Generates an interactive Leaflet map displaying the calculated shadows and sunlight areas.
-#'
-#' During each stage, the function logs the processing time for transparency and performance monitoring.
-#' If any stage fails (e.g., no valid shadow polygons are created), an error is thrown with a descriptive message.
-#'
-#' @importFrom leaflet leaflet addTiles addPolygons setView
-#' @importFrom sf st_sf st_union
-#' @export
-#'
-#' @examples
-#' # Example of using the create_building_shadow_map function
-#' # Assuming 'buildings_sf' is an existing sf object containing building and shadow geometries
-#' shadow_map <- create_building_shadow_map(buildings_sf, time = Sys.time())
-#'
-#' # Display the shadow map
-#' shadow_map
-create_building_shadow_map <- function(buildings, time, batch_size = 50) {
-
-  # Step 1: Process building geometries
-  start_time <- Sys.time()
-  processed_buildings <- process_buildings(buildings)
-  processing_duration <- Sys.time() - start_time
-  message("Time to process buildings: ", round(processing_duration, 2), " seconds")
-
-  # Validate processed buildings
-  if (is.null(processed_buildings) || nrow(processed_buildings) == 0) {
-    stop("Error: No processed buildings available.")
-  }
-
-  # Step 2: Compute shadow hulls for each building
-  individual_shadows <- compute_shadow_hulls(processed_buildings, batch_size)
-
-  # Step 3: Dissolve individual shadow polygons into a consolidated shadow area
-  shadows <- dissolve_shadow_polygons(individual_shadows)
-
-  # Validate shadow polygons
-  if (is.null(shadows) || length(shadows) == 0) {
-    stop("Error: No shadow polygons created.")
-  }
-
-  # Step 4: Create sunlight areas based on processed buildings and shadow polygons
-  message("Creating sunlight areas...")
-  start_sunlight_creation <- Sys.time()
-  sunlight <- create_sunlight_areas(processed_buildings, shadows)
-  sunlight_creation_duration <- Sys.time() - start_sunlight_creation
-  message("Time to create sunlight areas: ", round(sunlight_creation_duration, 2), " seconds")
-
-  # Validate sunlight areas
-  if (is.null(sunlight) || length(sunlight) == 0) {
-    stop("Error: No sunlight areas created.")
-  }
-
-  # Step 5: Generate the interactive shadow map
-  message("Creating shadow map...")
-  start_map_creation <- Sys.time()
-  map <- create_shadow_map(processed_buildings, shadows, sunlight, time)
-  map_creation_duration <- Sys.time() - start_map_creation
-  message("Time to create shadow map: ", round(map_creation_duration, 2), " seconds")
-
-  # Validate map creation
-  if (is.null(map)) {
-    stop("Error: Shadow map not created.")
-  }
-
-  # Return the generated map
-  return(map)
 }

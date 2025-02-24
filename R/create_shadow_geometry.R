@@ -165,17 +165,26 @@ compute_shadow_hulls <- function(buildings, batch_size = 50) {
 
 #' Dissolve Shadow Polygons into a Single Geometry
 #'
-#' This function dissolves multiple shadow hull polygons into a single unified geometry
-#' by applying a union operation to all the shadow geometries in the input. It is useful for
-#' combining overlapping or adjacent shadow areas into one boundary.
+#' This function processes building geometries, computes individual shadow hulls for each building,
+#' and then dissolves multiple shadow polygons into a single unified geometry. The `st_union` operation
+#' combines overlapping or adjacent shadow areas into one boundary, which is useful for visualizing
+#' the overall shadow coverage in a region.
 #'
-#' @param shadow_hulls An `sf` object containing shadow hull geometries. The `geometry` column
-#'   should include individual shadow polygons.
+#' @param buildings An `sf` object containing building geometries. The `geometry` column should include
+#'   individual building polygons.
+#' @param batch_size An integer value representing the batch size to process the shadow hulls in parts.
 #'
 #' @return An `sf` object with a single geometry representing the union of all shadow polygons.
 #'
-#' @details The function uses `st_union` to combine the geometries. If no valid geometries are present
-#'   in the input, an error is raised.
+#' @details
+#' This function works in three steps:
+#' 1. It processes the building geometries to extract relevant features.
+#' 2. It computes the shadow hulls for each building (in batches if needed).
+#' 3. It dissolves all individual shadow polygons into a unified geometry using the `st_union` function from the `sf` package.
+#'
+#' If no valid building geometries or shadow polygons are available, the function will raise an error.
+#' The function assumes the existence of helper functions such as `process_buildings()` and `compute_shadow_hulls()`,
+#' which should handle the relevant processing and computations.
 #'
 #' @importFrom sf st_union
 #' @importFrom dplyr summarise
@@ -183,18 +192,37 @@ compute_shadow_hulls <- function(buildings, batch_size = 50) {
 #'
 #' @examples
 #' # Example usage:
-#' dissolved_shadow <- dissolve_shadow_polygons(shadow_hulls_sf)
+#' dissolved_shadow <- shadow_polygons(buildings_sf, batch_size = 10)
 #' plot(dissolved_shadow$geometry)
 #'
-dissolve_shadow_polygons <- function(shadow_hulls) {
+shadow_polygons <- function(buildings, batch_size) {
+  # Step 1: Process building geometries
+  start_time <- Sys.time()
+  processed_buildings <- process_buildings(buildings)
+  processing_duration <- Sys.time() - start_time
+  message("Time to process buildings: ", round(processing_duration, 2), " seconds")
+
+  # Validate processed buildings
+  if (is.null(processed_buildings) || nrow(processed_buildings) == 0) {
+    stop("Error: No processed buildings available.")
+  }
+
+  # Step 2: Compute shadow hulls
+  individual_shadows <- compute_shadow_hulls(processed_buildings, batch_size)
   message("Dissolving shadow polygons...")
 
-  if (nrow(shadow_hulls) == 0) {
+  if (nrow(individual_shadows) == 0) {
     stop("No shadow hulls available for dissolving.")
   }
 
-  return(shadow_hulls %>%
+  # Step 3: Dissolve shadow polygons
+  return(individual_shadows %>%
            summarise(geometry = st_union(geometry)))
+
+  # Validate shadow polygons
+  if (is.null(individual_shadows) || nrow(individual_shadows) == 0) {
+    stop("Error: No shadow polygons created.")
+  }
 }
 
 
@@ -234,10 +262,9 @@ dissolve_shadow_polygons <- function(shadow_hulls) {
 #' print(sunlight_areas)
 #' }
 create_sunlight_areas <- function(buildings, shadows) {
-  bbox <- st_as_sfc(st_bbox(buildings))  # Convert bounding box to polygon
+  bbox <- st_as_sfc(st_bbox(shadows))  # Convert bounding box to polygon
 
   buildings_union <- st_union(buildings)  # Merge all buildings into one geometry
-  shadows_union <- st_union(shadows)  # Merge all shadows into one geometry
 
-  st_difference(bbox, st_union(buildings_union, shadows_union))  # Subtract buildings & shadows
+  st_difference(bbox, st_union(buildings_union, shadows))  # Subtract buildings & shadows
 }

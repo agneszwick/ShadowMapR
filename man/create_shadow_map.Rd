@@ -2,22 +2,36 @@
 % Please edit documentation in R/visualization.R
 \name{create_shadow_map}
 \alias{create_shadow_map}
-\title{Create a map showing buildings, shadows, and sunlight areas}
+\title{Create a Map Visualizing Buildings, Shadows, and Sunlight Areas}
 \usage{
-create_shadow_map(buildings_union, shadows, sunlight, time)
+create_shadow_map(building_sf, shadows, sunlight, time)
 }
 \arguments{
-\item{buildings_union}{sf object containing the merged building polygons}
+\item{building_sf}{sf object containing merged building polygons (e.g., `sf` object with the geometry of buildings).}
 
-\item{shadows}{sf object containing shadow polygons}
+\item{shadows}{sf object containing shadow polygons (e.g., `sf` object with the geometry representing shadow areas).}
 
-\item{sunlight}{sf object containing sunlight areas}
+\item{sunlight}{sf object containing sunlight polygons (e.g., `sf` object with the geometry representing areas under sunlight).}
 
-\item{time}{POSIXct object representing the time}
+\item{time}{POSIXct object representing the time of day when the map is generated (this could be used for dynamic updates or time-based visualization controls).}
 }
 \value{
-leaflet map object
+A `leaflet` map object with layers for buildings, shadows, and sunlight, along with a time control at the bottom-right.
 }
 \description{
-Create a map showing buildings, shadows, and sunlight areas
+This function generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
+The map allows users to toggle between different layers for buildings, shadows, and sunlight areas.
+The function also adds a time control in the bottom-right corner of the map, which could be used for dynamic time-based visualizations.
+}
+\details{
+The `create_shadow_map` function provides a visual representation of buildings, shadows, and sunlight areas in a geographic region.
+It allows users to interact with the map by toggling layers and exploring the spatial relationships between buildings and their shadows under different sunlight conditions.
+The map is initialized at the centroid of the building polygons.
+}
+\examples{
+\dontrun{
+# Assuming you have `sf` objects: building_sf, shadows, sunlight, and a time object.
+create_shadow_map(building_sf, shadows, sunlight, Sys.time())
+}
+
 }

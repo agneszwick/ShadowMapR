@@ -2,16 +2,26 @@
 % Please edit documentation in R/visualization.R
 \name{visualize_buildings}
 \alias{visualize_buildings}
-\title{Visualize building geometries with Leaflet}
+\title{Visualize Building Geometries with Leaflet}
 \usage{
 visualize_buildings(building_sf)
 }
 \arguments{
-\item{building_sf}{sf object containing building geometries with height and building ID}
+\item{building_sf}{sf object containing building geometries. This should be an `sf` object with columns for `height` (building height) and `part_id` (building ID or any other unique identifier for buildings).}
 }
 \value{
-A leaflet map object showing building geometries
+A `leaflet` map object displaying building geometries with colors based on height and popups showing building IDs.
 }
 \description{
-Visualize building geometries with Leaflet
+This function generates an interactive map using the `leaflet` package to visualize building geometries. Each building is represented by polygons, with colors indicating building heights. The map provides a popup showing the building ID when a user clicks on a building.
+}
+\details{
+The `visualize_buildings` function visualizes the spatial distribution of buildings with varying heights. The buildings are colored according to their height using a color palette from the `YlOrRd` scale. The map also includes a popup for each building that displays its `part_id` value (which could be used to uniquely identify each building).
+}
+\examples{
+\dontrun{
+# Assuming you have an sf object with building geometries, height, and part_id.
+visualize_buildings(building_sf)
+}
+
 }
