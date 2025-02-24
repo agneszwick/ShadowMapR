@@ -313,11 +313,13 @@ map_layer <- precompute_map_layers(building_sf, shadow_polygons, sunlight_areas)
 # Run interactive shadow map
 hourly_shadow_progression(map_layer, date)
 ```
-## Example 2: Generate an Hourly Shadow Progression Over a Day
 
-In **Example 2**, each function works at an hourly level but is essentially the same as in **Example 1**. The key difference is that all the calculations are done for each hour of the day.
+This image is a screenshot of the Shiny application.
 
-### Steps:
+<img src="images/hourly_shadow_progression.png" alt="Shadow Polygons">
+
+
+In **Example 2**, each function is essentially the same as in **Example 1**. The key difference is that all the calculations are done for each hour of the day.
 
 1. **`calculate_solar_day`**:  
    - The solar position (solar elevation and azimuth) is computed for each hour of the day using the `sun_position` function.
