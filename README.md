@@ -222,19 +222,9 @@ This image is a screenshot of the interactive Leaflet map showing the final resu
 
 **`create_building_shadow_map`**
 
-- `process_buildings`: Process building and shadow geometries by checking for invalid geometriesand filtering out empty ones
-- `create_shadow_polygons`: Calculate the convex hull of the building and shadow geometries
-- 
+- `process_buildings`: Processes building and shadow geometries by checking for invalid geometriesand filtering out empty ones
+- `compute_shadow_hulls`: Calculates the convex hull of the building and shadow geometries
+- `dissolve_shadow_polygons`: Dissolves multiple shadow hull polygons into a single unified geometry
+- `create_sunlight_areas`: Creates sunlight areas by subtracting the building and shadow geometries from a bounding box.
+- `create_shadow_map`: generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
 
-
-License
-This project is licensed under the GPL-3 License - see the LICENSE file for details.
-
-Contributing
-Please read CONTRIBUTING.md for details on our code of conduct, and the process for submitting pull requests to us.
-
-Acknowledgments
-Hat tip to anyone whose code was used
-Inspiration
-etc
->>>>>>> Stashed changes
