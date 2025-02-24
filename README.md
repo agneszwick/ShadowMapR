@@ -1,8 +1,3 @@
----
-output:
-  pdf_document: default
-  html_document: default
-
 # ShadowMapR
 ShadowMapR allows users to **calculate and visualize building shadows** based on sunlight exposure and shadowed areas using **XML or GML data**.
 
@@ -29,17 +24,22 @@ This package **does not** account for **terrain elevation** or **vegetation shad
 # install.packages("remotes") # if not already installed
 remotes::install_github("agneszwick/ShadowMapR")
 ```
-## Example
+## Example 1: Building shadows for a specific time
+
 ```r
 library(ShadowMapR)
 
-# Define file path
-file_path <- "path/to/your/xml/or/gml/file"
-crs_code <- extract_crs(file_path)
-building_sf <- load_building_data(file_path, crs_code)
-
-# OR: Use example file
+# Use example file
 building_sf <- get_example_data()
+
+# # OR: Define file path
+# file_path <- "path/to/your/xml/or/gml/file"
+
+# # Extract CRS code
+# crs_code <- extract_crs(file_path)
+
+# # Process xml/gml file and create simple feature 
+# building_sf <- load_building_data(file_path, crs_code)
 
 # Visualize data  
 visualize_buildings(building_sf)
@@ -53,12 +53,19 @@ building_sf <- sun_position(building_sf, time)
 # Calculate shadow offset
 buildings_with_shadows <- building_offset(building_sf)
 
+# Calculate shadow polygons
+shadows <- shadow_polygons(buildings_with_shadows, batch_size=50)
+
+# Create sunlight areas
+sun_area <- create_sunlight_areas(building_sf, shadows)
+
 # Display final map with sunny and shaded areas at defined time
-shadow_map <- create_building_shadow_map(buildings_with_shadows, time, batch_size = 100)
-shadow_map
+create_shadow_map(building_sf, shadows, sun_area, time)
 ```
 
 ## Detailed Explanation 
+### **`extract_crs`**
+
 ```r
 # Load package
 library(ShadowMapR)
@@ -72,16 +79,15 @@ print(crs)
 # (e.g.) 25832 
 ```
 
-**`extract_crs`**
 
 This function extracts the coordinate reference system (CRS) from a GML or XML file, reading the `srsName` attribute from the `<gml:Envelope>` element.
+
+### **`load_building_data`**
 
 ```r
 # Process xml/gml file and create simple feature 
 building_sf <- load_building_data(file_path, crs_code)
 ```
-
-**`load_building_data`**
 
 @param *path*: Path to the directory or file containing the files.
 
@@ -89,16 +95,16 @@ building_sf <- load_building_data(file_path, crs_code)
 
 - `.gml` file
   - `extract_gml_polygons`: reads a `.gml` file and extracts *geometry* and *measuredHeight* of buildings
-  - @output Simple feature with *part_id*, *geometry* and *height* column
+  - @output: An `sf` with *part_id*, *geometry* and *height* column
  
 - `.xml` file
   - `extract_xml_polygons`: Creates data frame of building data from an XML file
   - `convert_to_2D`: Creates simple feature of 2D building polygons
   - `clean_building_polygons`: Clean building polygon geometries by grouping and summarizing them
-  - @output: Simple feature with *bldg_id*, *part_id*, *geometry*, *height* and *file* column
+  - @output: An `sf` with *bldg_id*, *part_id*, *geometry*, *height* and *file* column
 
+### **`get_example_data()`** 
 
-**Alternative with example file**
 ```r
 # Process example file
 building_sf <- get_example_data()
@@ -126,21 +132,16 @@ building_sf <- get_example_data()
 # # ℹ Use `print(n = ...)` to see more rows
 
 ```
-**`get_example_data()`** 
-
-1. Set file path to example.xml
-2. Extract CRS code from the example `extract_crs`
-3. Runs `load_building_data`
-
+This function sets the file path to example.xml, extracts the CRS code from the example `extract_crs` and runs `load_building_data`.
 
 ```r
 visualize_buildings(building_sf)
 ```
 This image is a screenshot of the interactive Leaflet map showing the visualization of the processed building data.
 
-<img src="images/result_visualize_buildings.png" alt="Visualization Example" width="600" height="400">
+<img src="images/visualize_buildings.png" alt="Visualization Example">
 
-
+### **`sun_position(building_sf, time)`**
 ```r
 time <- as.POSIXct("yyyy-mm-dd hh:mm:ss", tz = "Europe/Berlin")
 # time <- as.POSIXct("2025-02-18 15:00:00", tz = "Europe/Berlin")
@@ -164,19 +165,18 @@ building_sf <- sun_position(building_sf, time)
 # 6 DEBE06Y… ((370582.5 5808413, 3705…   5.27 DEBE06… exam…        221.          17.7         13.1
 # # ℹ 1 more variable: centroid_lat <dbl>
 ```
-**`sun_position(building_sf, time)`**
+This function calculates the solar position for the provided building data and time. 
 
 @param *building_sf*: An sf object containing building geometries.
 
 @param *time*: A POSIXct object representing the time for which to calculate the solar position.
-
-This function calculates the solar position for the provided building data and time. 
 
 - `calc_centroids`: Calculates centroids of sf polygons
 - `calc_solar_pos`: Calculates solar position (*sol_azimuth* and *sol_elevation*) of the centroids
   
 @output: An `sf` object containing building geometries and solar positions (*sol_azimuth* and *sol_elevation*).
 
+### **`building_offset`**
 
 ```r
 buildings_with_shadows <- building_offset(building_sf)
@@ -201,30 +201,143 @@ buildings_with_shadows <- building_offset(building_sf)
 plot(st_geometry(buildings_with_shadows$shadow_geometry), col = "grey")
 plot(st_geometry(buildings_with_shadows), add = TRUE, col = "black", lwd = 2)
 ```
-<img src="images/building_offset.png" alt="Building offset" width="600" height="400">
-
-**`building_offset`**
+<img src="images/building_offset.png" alt="Building offset">
 
 This function computes a shadow offset for each building in an `sf` object based on the building's height, solar azimuth, and solar elevation. It applies a shadow vector of the correct length and angle to each corner of the building, generating a new polygon that represents the shadow projection.
 
 @param *buildings*: sf object containing building geometries and attributes such as *height*, *solar azimuth*, and *solar elevation*.
 
-@output: sf object containing buildings with an additional column *shadow_geometry* representing the calculated shadow polygons.
+@output: An `sf` object containing buildings with an additional column *shadow_geometry* representing the calculated shadow polygons.
+
+
+### **`shadow_polygons`**
 
 ```r
-shadow_map <- create_building_shadow_map(building_offset, time, batch_size = 100)
+shadows <- shadow_polygons(buildings_with_shadows, batch_size=50)
+
+# > print(shadows)
+# Simple feature collection with 1 feature and 0 fields
+# Geometry type: MULTIPOLYGON
+# Dimension:     XY
+# Bounding box:  xmin: 370231.4 ymin: 5808336 xmax: 370712.8 ymax: 5808923
+# Projected CRS: ETRS89 / UTM zone 33N
+#                         geometry
+# 1 MULTIPOLYGON (((370415.7 58...
+
+
+plot(st_geometry(shadows), col = "grey")
+plot(st_geometry(building_sf), add = TRUE, col = "black", lwd = 2)
 ```
+<img src="images/shadow_polygons.png" alt="Shadow Polygons">
 
-This image is a screenshot of the interactive Leaflet map showing the final result.
+This function processes building geometries, computes individual shadow hulls for each building, and then dissolves multiple shadow polygons into a single unified geometry.
 
-<img src="images/shadow_map.png" alt="Visualization Example" width="600" height="400">
+@param *buildings*: An sf object containing building geometries and attributes such as *height*, *solar azimuth*, and *solar elevation*.
 
+@param *batch_size* An integer value representing the batch size to process the shadow hulls in parts
 
-**`create_building_shadow_map`**
+@output: An `sf` object with a single geometry representing the union of all shadow polygons.
 
 - `process_buildings`: Processes building and shadow geometries by checking for invalid geometriesand filtering out empty ones
 - `compute_shadow_hulls`: Calculates the convex hull of the building and shadow geometries
-- `dissolve_shadow_polygons`: Dissolves multiple shadow hull polygons into a single unified geometry
-- `create_sunlight_areas`: Creates sunlight areas by subtracting the building and shadow geometries from a bounding box.
-- `create_shadow_map`: generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
 
+
+### **`create_sunlight_areas`**
+
+```r
+sun_area <- create_sunlight_areas(building_sf, shadows)
+
+# > print(sun_area)
+# Geometry set for 1 feature 
+# Geometry type: MULTIPOLYGON
+# Dimension:     XY
+# Bounding box:  xmin: 370231.4 ymin: 5808336 xmax: 370712.8 ymax: 5808923
+# Projected CRS: ETRS89 / UTM zone 33N
+# MULTIPOLYGON (((370231.4 5808336, 370231.4 5808...
+
+plot(st_geometry(sun_area), col = "yellow")
+plot(st_geometry(shadows), add=T, col = "grey")
+plot(st_geometry(buildings_with_shadows), add = TRUE, col = "black", lwd = 2)
+```
+<img src="images/create_sun_areas.png" alt="Shadow Polygons">
+
+This function creates sunlight areas by subtracting the building and shadow geometries from a bounding box.
+
+### **`create_shadow_map`**
+
+```r
+create_shadow_map(building_sf, shadows, sun_area, time)
+```
+This image is a screenshot of the interactive Leaflet map displaying shadows, sunlight areas and buildings.
+<img src="images/create_shadow_map.png" alt="Shadow Polygons">
+
+This function generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
+
+
+## Example 2: Generate an hourly shadow progression over a day
+```r
+library(ShadowMapR)
+
+# Use example file
+building_sf <- get_example_data()
+
+# OR: Define file path
+# file_path <- "C:/Users/agnes/Documents/EAGLE/Introduction_Programming/Assignment_25/sunshine/test2/566_5514.gml"
+# file_path <- "C:/Users/agnes/Documents/EAGLE/Introduction_Programming/Assignment_25/sunshine/test/LoD1_385_5814.xml"
+
+# Extract CRS code
+# crs_code <- extract_crs(file_path)
+
+# # Process xml/gml file and create simple feature
+# building_sf <- load_building_data(file_path, crs_code)
+
+# Visualize data
+visualize_buildings(building_sf)
+
+# Define date
+date <- as.Date("2025-02-24")
+
+# Calculate solar data for the day
+solar_results <- calculate_solar_day(building_sf, date)
+
+# Calculate hourly shadow offset
+shadows <- calculate_hourly_shadow_offset(solar_results)
+
+# Create hourly shadow polygons and sunlight areas
+shadow_polygons <- create_hourly_shadow_polygons(shadows, batch=50)
+sunlight_areas <- create_hourly_sunlight_areas(shadow_polygons, building_sf)
+
+# Precompute map layers
+map_layer <- precompute_map_layers(building_sf, shadow_polygons, sunlight_areas)
+
+# Run interactive shadow map
+hourly_shadow_progression(map_layer, date)
+```
+## Example 2: Generate an Hourly Shadow Progression Over a Day
+
+In **Example 2**, each function works at an hourly level but is essentially the same as in **Example 1**. The key difference is that all the calculations are done for each hour of the day.
+
+### Steps:
+
+1. **`calculate_solar_day`**:  
+   - The solar position (solar elevation and azimuth) is computed for each hour of the day using the `sun_position` function.
+
+2. **`calculate_hourly_shadow_offset`**:  
+   - Shadow offsets are calculated for each hour, accounting for changes in the solar position using the `building_offset` function.
+   - This gives the shadow cast by buildings for each hour of the day.
+
+3. **`create_hourly_shadow_polygons`**:  
+   - This function creates the shadow cast by buildings for each hour of the day using the `shadow_polygons` function.
+
+4. **`create_hourly_sunlight_areas`**:  
+   - Calculates which areas remain in sunlight at each hour using the `create_sunlight_areas` function.
+
+5. **`precompute_map_layers`**:  
+   - Combines the hourly data for buildings, shadows, and sunlight into a structured map layer for each hour.
+   - This results in a list of map layers, with each layer representing a specific hour of the day.
+
+6. **`hourly_shadow_progression`**:  
+   - The final output is a **Shiny application** that allows users to visualize the shadow progression over the course of a full day.
+   - The application includes:
+     - A **slider** to allow users to move through each hour of the day.
+     - An **interactive map** that shows how the shadows and sunlight areas change as the day progresses.
