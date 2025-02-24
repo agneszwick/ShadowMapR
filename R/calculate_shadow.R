@@ -138,16 +138,16 @@ calculate_shadow_points <- function(building, solar_pos, shadow_length) {
 #' solar azimuth, and solar elevation. It applies a shadow vector of the correct length and angle to each corner
 #' of the building, generating a new polygon that represents the shadow projection.
 #'
-#' @param buildings sf object containing building geometries and attributes such as height, solar azimuth, and solar elevation.
+#' @param building_sf An sf object containing building geometries and attributes such as height, solar azimuth, and solar elevation.
 #' @return sf object containing buildings with an additional column `shadow_geometry` representing the calculated shadow polygons.
 #' @importFrom sf st_sfc st_crs
+#' @export
 #' @examples
 #' \dontrun{
-#' # Example usage
 #' library(sf)
 #'
 #' # Create example buildings with attributes
-#' buildings <- st_sf(
+#' building_sf <- st_sf(
 #'   height = c(10, 15),
 #'   sol_azimuth = c(180, 200),
 #'   sol_elevation = c(45, 30),
@@ -159,20 +159,20 @@ calculate_shadow_points <- function(building, solar_pos, shadow_length) {
 #' )
 #'
 #' # Compute shadow geometry for each building
-#' building_offset <- building_offset(buildings)
+#' building_offset <- building_offset(building_sf)
 #' print(building_offset)
 #' }
-building_offset <- function(buildings) {
+building_offset <- function(building_sf) {
   # Check for required columns
   required_columns <- c("height", "sol_azimuth", "sol_elevation")
-  missing_columns <- setdiff(required_columns, names(buildings))
+  missing_columns <- setdiff(required_columns, names(building_sf))
   if (length(missing_columns) > 0) {
     stop(sprintf("Missing required columns: %s", paste(missing_columns, collapse = ", ")))
   }
 
   # Compute shadow geometry for each building
-  shadow_geometries <- lapply(1:nrow(buildings), function(i) {
-    current_building <- buildings[i, ]
+  shadow_geometries <- lapply(1:nrow(building_sf), function(i) {
+    current_building <- building_sf[i, ]
 
     # Extract solar position and building height
     solar_azimuth <- current_building$sol_azimuth
@@ -196,7 +196,7 @@ building_offset <- function(buildings) {
   })
 
   # Assign shadow geometries to buildings
-  buildings$shadow_geometry <- st_sfc(do.call(c, shadow_geometries), crs = st_crs(buildings))
+  building_sf$shadow_geometry <- st_sfc(do.call(c, shadow_geometries), crs = st_crs(building_sf))
 
-  return(buildings)
+  return(building_sf)
 }

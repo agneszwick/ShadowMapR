@@ -19,7 +19,6 @@ of the building, generating a new polygon that represents the shadow projection.
 }
 \examples{
 \dontrun{
-# Example usage
 library(sf)
 
 # Create example buildings with attributes
