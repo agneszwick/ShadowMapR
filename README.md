@@ -312,3 +312,32 @@ map_layer <- precompute_map_layers(building_sf, shadow_polygons, sunlight_areas)
 
 # Run interactive shadow map
 hourly_shadow_progression(map_layer, date)
+```
+## Example 2: Generate an Hourly Shadow Progression Over a Day
+
+In **Example 2**, each function works at an hourly level but is essentially the same as in **Example 1**. The key difference is that all the calculations are done for each hour of the day.
+
+### Steps:
+
+1. **`calculate_solar_day`**:  
+   - The solar position (solar elevation and azimuth) is computed for each hour of the day using the `sun_position` function.
+
+2. **`calculate_hourly_shadow_offset`**:  
+   - Shadow offsets are calculated for each hour, accounting for changes in the solar position using the `building_offset` function.
+   - This gives the shadow cast by buildings for each hour of the day.
+
+3. **`create_hourly_shadow_polygons`**:  
+   - This function creates the shadow cast by buildings for each hour of the day using the `shadow_polygons` function.
+
+4. **`create_hourly_sunlight_areas`**:  
+   - Calculates which areas remain in sunlight at each hour using the `create_sunlight_areas` function.
+
+5. **`precompute_map_layers`**:  
+   - Combines the hourly data for buildings, shadows, and sunlight into a structured map layer for each hour.
+   - This results in a list of map layers, with each layer representing a specific hour of the day.
+
+6. **`hourly_shadow_progression`**:  
+   - The final output is a **Shiny application** that allows users to visualize the shadow progression over the course of a full day.
+   - The application includes:
+     - A **slider** to allow users to move through each hour of the day.
+     - An **interactive map** that shows how the shadows and sunlight areas change as the day progresses.
