@@ -2,35 +2,33 @@
 % Please edit documentation in R/visualization.R
 \name{create_shadow_map}
 \alias{create_shadow_map}
-\title{Create a Map Visualizing Buildings, Shadows, and Sunlight Areas}
+\title{Create an Interactive Map of Buildings, Shadows, and Sunlight}
 \usage{
 create_shadow_map(building_sf, shadows, sunlight, time)
 }
 \arguments{
-\item{building_sf}{sf object containing merged building polygons (e.g., `sf` object with the geometry of buildings).}
+\item{building_sf}{An `sf` object containing building polygons (e.g., the geometry of buildings).}
 
-\item{shadows}{sf object containing shadow polygons (e.g., `sf` object with the geometry representing shadow areas).}
+\item{shadows}{An `sf` object containing shadow polygons (e.g., the geometry representing shadow areas).}
 
-\item{sunlight}{sf object containing sunlight polygons (e.g., `sf` object with the geometry representing areas under sunlight).}
+\item{sunlight}{An `sf` object containing sunlight polygons (e.g., the geometry representing areas under sunlight).}
 
-\item{time}{POSIXct object representing the time of day when the map is generated (this could be used for dynamic updates or time-based visualization controls).}
+\item{time}{A `POSIXct` object representing the time of day for the map visualization (used for potential dynamic updates).}
 }
 \value{
-A `leaflet` map object with layers for buildings, shadows, and sunlight, along with a time control at the bottom-right.
+A `leaflet` map object displaying buildings, shadows, and sunlight layers with a time control.
 }
 \description{
-This function generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
-The map allows users to toggle between different layers for buildings, shadows, and sunlight areas.
-The function also adds a time control in the bottom-right corner of the map, which could be used for dynamic time-based visualizations.
+Generates an interactive map using the `leaflet` package to visualize buildings, shadows, and sunlight areas.
+Users can toggle between different layers and interact with a time control for potential dynamic updates.
 }
 \details{
-The `create_shadow_map` function provides a visual representation of buildings, shadows, and sunlight areas in a geographic region.
-It allows users to interact with the map by toggling layers and exploring the spatial relationships between buildings and their shadows under different sunlight conditions.
-The map is initialized at the centroid of the building polygons.
+This function creates a visual representation of buildings, their cast shadows, and sunlight exposure at a given time.
+The map initializes at the centroid of the building polygons and provides interactive layer toggles for better exploration.
 }
 \examples{
 \dontrun{
-# Assuming you have `sf` objects: building_sf, shadows, sunlight, and a time object.
+# Example usage with `sf` objects and a time input
 create_shadow_map(building_sf, shadows, sunlight, Sys.time())
 }
 

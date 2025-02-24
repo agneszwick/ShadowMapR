@@ -171,7 +171,8 @@ compute_shadow_hulls <- function(buildings, batch_size = 50) {
 #' the overall shadow coverage in a region.
 #'
 #' @param buildings An `sf` object containing building geometries. The `geometry` column should include
-#'   individual building polygons.
+#'   individual building polygons and `shadow_geometry` the offset of each building geometry.
+#'
 #' @param batch_size An integer value representing the batch size to process the shadow hulls in parts.
 #'
 #' @return An `sf` object with a single geometry representing the union of all shadow polygons.

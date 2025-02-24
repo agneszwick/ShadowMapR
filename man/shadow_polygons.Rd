@@ -8,7 +8,7 @@ shadow_polygons(buildings, batch_size)
 }
 \arguments{
 \item{buildings}{An `sf` object containing building geometries. The `geometry` column should include
-individual building polygons.}
+individual building polygons and `shadow_geometry` the offset of each building geometry.}
 
 \item{batch_size}{An integer value representing the batch size to process the shadow hulls in parts.}
 }
