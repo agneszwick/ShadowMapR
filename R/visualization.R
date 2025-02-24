@@ -174,7 +174,6 @@ create_shadow_map <- function(building_sf, shadows, sunlight, time) {
 #' @import leaflet
 #' @import sf
 #' @import shinyWidgets
-#' @import lwgeom
 #'
 #' @return Launches a Shiny interactive map application. The application visualizes the shadow
 #'         progression throughout the day, allowing the user to select different hours via a slider
