@@ -13,8 +13,7 @@ Designed for **3D building models** in **LoD0** and **LoD2** formats from German
 ## Usage
 Users can analyze shadows at specific times or visualize their evolution throughout the day, making it ideal for urban planning, solar analysis, and environmental studies.
 
-⚠ **Limitations:**
-This package **does not** account for **terrain elevation** or **vegetation shadows**. It assumes all buildings are placed on a **flat surface**.
+⚠ This package **does not** account for **terrain elevation** or **vegetation shadows**. It assumes all buildings are placed on a **flat surface**.
 
 ## Requirements
 
@@ -33,6 +32,12 @@ This package requires the following R packages:
 - `xml2`
 - `suntools`
 - `lubridate`
+
+## Limitations
+
+- The file should contain no more than **5,000 buildings**, as processing times may exceed **2 minutes** for larger files. This was tested on a **Lenovo Ideapad SE40** with an **AMD Ryzen 7 3700U** CPU (4 cores, 8 threads, base clock 2.3 GHz, boost clock up to 4.0 GHz).
+- If larger datasets need to be processed, it is recommended to filter the data beforehand or to distribute the computation across multiple cores (e.g., using `furrr::future_map()`).
+
 
 ## Installation
 
@@ -365,3 +370,5 @@ In **Example 2**, each function is essentially the same as in **Example 1**. The
    - The application includes:
      - A **slider** to allow users to move through each hour of the day.
      - An **interactive map** that shows how the shadows and sunlight areas change as the day progresses.
+    
+
