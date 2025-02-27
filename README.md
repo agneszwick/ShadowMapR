@@ -16,13 +16,35 @@ Users can analyze shadows at specific times or visualize their evolution through
 ⚠ **Limitations:**
 This package **does not** account for **terrain elevation** or **vegetation shadows**. It assumes all buildings are placed on a **flat surface**.
 
+## Requirements
+
+This package requires the following R packages:
+
+- `dplyr`
+- `future`
+- `furrr`
+- `ggplot2`
+- `leaflet`
+- `purrr`
+- `sf`
+- `stringr`
+- `tibble`
+- `tidyr`
+- `xml2`
+- `suntools`
+- `lubridate`
 
 ## Installation
 
 **From GitHub** 
 ```r
-# install.packages("remotes") # if not already installed
+# If some packages are not installed, you can install them with the following command:
+# install.packages(c("devtools", "dplyr", "future", "furrr", "ggplot2", "leaflet", "purrr", "remotes", "sf", 
+#                    "stringr", "tibble", "tidyr", "xml2", "lubridate"))
+# devtools::install_github("adokter/suntools")
+
 remotes::install_github("agneszwick/ShadowMapR")
+
 ```
 ## Example 1: Building shadows for a specific time
 
