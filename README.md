@@ -30,6 +30,7 @@ This package requires the following R packages:
 - `tibble`
 - `tidyr`
 - `xml2`
+- `shinyWidgets`
 - `suntools`
 - `lubridate`
 
@@ -45,7 +46,7 @@ This package requires the following R packages:
 ```r
 # If some packages are not installed, you can install them with the following command:
 # install.packages(c("devtools", "dplyr", "future", "furrr", "ggplot2", "leaflet", "purrr", "remotes", "sf", 
-#                    "stringr", "tibble", "tidyr", "xml2", "lubridate"))
+#                    "stringr", "shinyWidgets", "tibble", "tidyr", "xml2", "lubridate"))
 # devtools::install_github("adokter/suntools")
 
 remotes::install_github("agneszwick/ShadowMapR")
