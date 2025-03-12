@@ -33,6 +33,7 @@ This package requires the following R packages:
 - `shinyWidgets`
 - `suntools`
 - `lubridate`
+- `lwgeom`
 
 ## Limitations
 
@@ -46,7 +47,7 @@ This package requires the following R packages:
 ```r
 # If some packages are not installed, you can install them with the following command:
 # install.packages(c("devtools", "dplyr", "future", "furrr", "ggplot2", "leaflet", "purrr", "remotes", "sf", 
-#                    "stringr", "shinyWidgets", "tibble", "tidyr", "xml2", "lubridate"))
+#                    "stringr", "shinyWidgets", "tibble", "tidyr", "xml2", "lubridate", "lwgeom"))
 # devtools::install_github("adokter/suntools")
 
 remotes::install_github("agneszwick/ShadowMapR")
