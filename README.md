@@ -310,8 +310,7 @@ library(ShadowMapR)
 building_sf <- get_example_data()
 
 # OR: Define file path
-# file_path <- "C:/Users/agnes/Documents/EAGLE/Introduction_Programming/Assignment_25/sunshine/test2/566_5514.gml"
-# file_path <- "C:/Users/agnes/Documents/EAGLE/Introduction_Programming/Assignment_25/sunshine/test/LoD1_385_5814.xml"
+# file_path <- "path/to/your/xml/or/gml/file"
 
 # Extract CRS code
 # crs_code <- extract_crs(file_path)
