@@ -45,9 +45,21 @@ This package requires the following R packages:
 
 **From GitHub** 
 ```r
-# If some packages are not installed, you can install them with the following command:
-# install.packages(c("devtools", "dplyr", "future", "furrr", "ggplot2", "leaflet", "purrr", "remotes", "sf", 
-#                    "stringr", "shinyWidgets", "tibble", "tidyr", "xml2", "lubridate", "lwgeom"))
+# List of required packages
+packages <- c("devtools", "dplyr", "future", "furrr", "ggplot2", "leaflet", 
+              "purrr", "remotes", "sf", "stringr", "shinyWidgets", "tibble", 
+              "tidyr", "xml2", "lubridate", "lwgeom")
+
+# Check which packages are missing
+missing_packages <- packages[!(packages %in% installed.packages()[,"Package"])]
+
+# Install only missing packages
+if (length(missing_packages) > 0) {
+  install.packages(missing_packages)
+} else {
+  message("All packages are already installed!")
+}
+
 # devtools::install_github("adokter/suntools")
 
 remotes::install_github("agneszwick/ShadowMapR")
