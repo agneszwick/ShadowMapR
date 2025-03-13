@@ -60,7 +60,7 @@ if (length(missing_packages) > 0) {
   message("All packages are already installed!")
 }
 
-# devtools::install_github("adokter/suntools")
+devtools::install_github("adokter/suntools")
 
 remotes::install_github("agneszwick/ShadowMapR")
 
